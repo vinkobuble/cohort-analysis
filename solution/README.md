@@ -17,7 +17,7 @@ To get list of all cli arguments run
 
 CL example if your current dir is `solution`: 
 
-`python3 . -cf ../assignment/customers.csv -of ../assignment/orders.csv -tz Americas/New_York`
+`python3 . -cf ../assignment/customers.csv -of ../assignment/orders.csv -tz -0500`
 
 
 

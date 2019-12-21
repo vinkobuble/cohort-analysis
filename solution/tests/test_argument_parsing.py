@@ -13,7 +13,7 @@ class TestArgumentParsing(TestCase):
         fixtures: Dict[str: str] = {
             'customers_file_path': "customers.csv",
             'orders_file_path': "orders.csv",
-            'timezone': "Americas/New_York"
+            'timezone': "-0500"
         }
 
         (customers_file_path, orders_file_path, timezone) = parse_argv(
@@ -31,7 +31,7 @@ class TestArgumentParsing(TestCase):
              self.assertRaises(SystemExit) as systemExit:
             parse_argv(
                 f"""--orders-file=x
-                --timezone=Americas/New_York""".split()
+                --timezone=-0500""".split()
             )
 
         self.assertEqual(systemExit.exception.code, 2)
@@ -41,7 +41,7 @@ class TestArgumentParsing(TestCase):
              self.assertRaises(SystemExit) as systemExit:
             parse_argv(
                 f"""--customers-file=x
-                --timezone=Americas/New_York""".split()
+                --timezone=-0500""".split()
             )
 
         self.assertEqual(systemExit.exception.code, 2)
