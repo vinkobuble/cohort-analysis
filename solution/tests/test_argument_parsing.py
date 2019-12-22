@@ -22,9 +22,9 @@ class TestArgumentParsing(TestCase):
             --timezone={fixtures['timezone']}""".split()
         )
 
-        self.assertEqual(customers_file_path, fixtures['customers_file_path'])
-        self.assertEqual(orders_file_path, fixtures['orders_file_path'])
-        self.assertEqual(timezone, fixtures['timezone'])
+        self.assertEqual(fixtures['customers_file_path'], customers_file_path)
+        self.assertEqual(fixtures['orders_file_path'], orders_file_path)
+        self.assertEqual(fixtures['timezone'], timezone)
 
     def test_missing_cl_argument_customers_file(self):
         with utils.suppress_stdout(), \
@@ -34,7 +34,7 @@ class TestArgumentParsing(TestCase):
                 --timezone=-0500""".split()
             )
 
-        self.assertEqual(systemExit.exception.code, 2)
+        self.assertEqual(2, systemExit.exception.code)
 
     def test_missing_cl_argument_orders_file(self):
         with utils.suppress_stdout(), \
@@ -44,7 +44,7 @@ class TestArgumentParsing(TestCase):
                 --timezone=-0500""".split()
             )
 
-        self.assertEqual(systemExit.exception.code, 2)
+        self.assertEqual(2, systemExit.exception.code)
 
     def test_missing_cl_argument_timezone(self):
         with utils.suppress_stdout(), \
@@ -54,4 +54,4 @@ class TestArgumentParsing(TestCase):
                     --orders-file=x""".split()
             )
 
-        self.assertEqual(systemExit.exception.code, 2)
+        self.assertEqual(2, systemExit.exception.code)

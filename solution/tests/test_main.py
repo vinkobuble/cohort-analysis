@@ -30,8 +30,8 @@ class TestMain(TestCase):
         sys.argv = prev_argv
         parse_argv_mock.assert_called_once_with(args)
         cohort_index_builder_mock.assert_called_once()
-        self.assertEqual(len(cohort_index_builder_mock.call_args[0]), 2)
+        self.assertEqual(2, len(cohort_index_builder_mock.call_args[0]))
 
         self.assertIsInstance(cohort_index_builder_mock.call_args[0][0],
                               collections.Iterator)
-        self.assertEqual(cohort_index_builder_mock.call_args[0][1], timezone)
+        self.assertEqual(timezone, cohort_index_builder_mock.call_args[0][1])

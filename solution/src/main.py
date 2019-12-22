@@ -32,5 +32,5 @@ def main():
     with open(customers_file_path) as csv_file:
         customers_csv_reader = csv.reader(csv_file)
         index_builder = cohort_index.CohortIndexBuilder(customers_csv_reader, timezone)
-        index_builder.build()
+        index_builder.build_cohort_to_customer_range_index()
 
