@@ -2,7 +2,7 @@ from __future__ import annotations
 import collections.abc as collections
 from datetime import datetime
 from typing import Dict, Tuple, List
-import bisect
+from bisect import bisect
 
 from src.utils import ComparisonMixin, parse_timezone
 
@@ -90,7 +90,7 @@ class CustomerIdSegmentsNode(ComparisonMixin):
             self.subtree = [(CustomerIdSegmentsNode(customer_id))]
             return
 
-        insertion_index = bisect.bisect(self.subtree, CustomerIdSegmentsNode(customer_id))
+        insertion_index = bisect(self.subtree, CustomerIdSegmentsNode(customer_id))
 
         if insertion_index == len(self.subtree):
             if not self.subtree[-1]._try_expand_segment_end(customer_id):
@@ -116,7 +116,7 @@ class CustomerIdSegmentsNode(ComparisonMixin):
         if self.customer_id_segment[0] <= customer_id <= self.customer_id_segment[1]:
             return True
 
-        index = bisect.bisect(self.subtree, CustomerIdSegmentsNode(customer_id)) - 1
+        index = bisect(self.subtree, CustomerIdSegmentsNode(customer_id)) - 1
         if index == -1:
             raise RuntimeError("It looks like we are looking for customer ID at the wrong place: "
                                f"customer_id = {customer_id}; segment ={self.subtree_customer_id_segment}")
@@ -130,7 +130,9 @@ class CustomerIdSegmentsRootNode(ComparisonMixin):
         self.cohort_id = cohort_id
 
     def add_customer(self, customer_id: int) -> None:
-        if not self.root_node.try_expand_segment_start(customer_id):
+        if customer_id + 1 < self.root_node.customer_id_segment[0]:
+            self.root_node = CustomerIdSegmentsNode(customer_id, self.root_node)
+        elif not self.root_node.try_expand_segment_start(customer_id):
             self.root_node.add_customer(customer_id)
 
     def has_customer_id(self, customer_id: int) -> bool:
@@ -159,10 +161,6 @@ class CohortCustomerSegmentsIndex:
         if cohort_customer_id_segment_node is None:
             self.cohort_id_to_customer_id_ranges[customer_cohort_id] = CustomerIdSegmentsRootNode(customer_cohort_id,
                                                                                                   customer_id)
-        elif customer_id + 1 < cohort_customer_id_segment_node.customer_id_segment[0]:
-            self.cohort_id_to_customer_id_ranges[customer_cohort_id] = \
-                CustomerIdSegmentsRootNode(customer_cohort_id, customer_id,
-                                           cohort_customer_id_segment_node)
         else:
             cohort_customer_id_segment_node.add_customer(customer_id)
 

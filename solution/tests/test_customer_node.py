@@ -1,6 +1,6 @@
 import unittest
 
-import src.cohort_index as cohort_index
+import src.cohort_customer_index as cohort_index
 
 
 class TestCustomerIdSegmentNode(unittest.TestCase):

@@ -3,7 +3,7 @@ import sys
 import csv
 from typing import List, Dict
 
-import src.cohort_index as cohort_index
+import src.cohort_customer_index as cohort_index
 
 
 def parse_argv(args: List[str]) -> (str, str, str):

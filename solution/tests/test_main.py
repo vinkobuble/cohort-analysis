@@ -2,7 +2,7 @@ import collections.abc as collections
 import sys
 from unittest import TestCase, mock
 
-import src.cohort_index
+import src.cohort_customer_index
 
 
 class TestMain(TestCase):
