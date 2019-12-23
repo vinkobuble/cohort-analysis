@@ -21,3 +21,10 @@ class ComparisonMixin:
 def parse_timezone(timezone: str) -> tzinfo:
     # HACK(vinko): Parse any date to get timezone offset from string
     return datetime.strptime("1971-01-01" + timezone, "%Y-%m-%d%z").tzinfo
+
+
+def parse_datetime_with_timezone(date_str: str, timezone: tzinfo) -> datetime:
+    utc_datetime = datetime.strptime(
+        date_str + "+0000",
+        "%Y-%m-%d %H:%M:%S%z")
+    return utc_datetime.astimezone(timezone)

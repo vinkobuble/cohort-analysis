@@ -1,8 +1,10 @@
 import collections.abc as collections
+import csv
 import sys
 from unittest import TestCase, mock
 
-import src.cohort_customer_index
+import src.main as main
+import src.cohort_customer_segment_tree as cohort_customer_index
 
 
 class TestMain(TestCase):
@@ -13,23 +15,45 @@ class TestMain(TestCase):
         sys.argv.extend(args)
 
         customers_file_path = "./fixtures/customers_one_row.csv"
+        orders_file_path = "./fixtures/orders_one_row.csv"
+        output_file_path = "./temp/cohorts.csv"
         timezone = "-0500"
         with mock.patch(
-                "src.cohort_index.CohortIndexBuilder",
+                "src.cohort_customer_index.CohortIndexBuilder",
                 mock.MagicMock(
                     return_value=mock.Mock())
         ) as cohort_index_builder_mock, \
                 mock.patch(
+                    "src.customer_cohort_index.CustomerIndexBuilder",
+                    mock.MagicMock(
+                        return_value=mock.Mock())
+                ) as customer_index_builder_mock, \
+                mock.patch(
+                    "src.orders.OrdersReader",
+                    mock.MagicMock(
+                        return_value=mock.Mock())
+                ) as orders_reader_mock, \
+                mock.patch(
+                    "src.cohort_statistics.CohortStatisticsAggregator",
+                    mock.MagicMock(
+                        return_value=mock.Mock())
+                ) as statistics_mock, \
+                mock.patch(
                     "src.main.parse_argv",
                     mock.MagicMock(
                         return_value=(customers_file_path,
-                                      "./fixtures/orders.csv",
+                                      orders_file_path,
+                                      output_file_path,
                                       timezone))) as parse_argv_mock:
-            src.main.main()
+            main.main()
 
         sys.argv = prev_argv
         parse_argv_mock.assert_called_once_with(args)
         cohort_index_builder_mock.assert_called_once()
+        customer_index_builder_mock.assert_called_once()
+        orders_reader_mock.assert_called_once()
+        statistics_mock.assert_called_once()
+
         self.assertEqual(2, len(cohort_index_builder_mock.call_args[0]))
 
         self.assertIsInstance(cohort_index_builder_mock.call_args[0][0],

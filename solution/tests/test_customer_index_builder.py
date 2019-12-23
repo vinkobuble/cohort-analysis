@@ -12,7 +12,7 @@ class TestCustomerIndexBuilder(TestCase):
         customer_cohort_index.CustomerIndexBuilder([])
 
     def test_customer_index_builder_build(self) -> None:
-        cohort_index = utils.cohort_index_builder(customers.FIVE_ROWS).build_cohort_to_customer_range_index()
+        cohort_index = utils.cohort_index_builder(customers.FIVE_ROWS).build()
         builder = customer_cohort_index.CustomerIndexBuilder(cohort_index)
 
         index = builder.build()
@@ -21,7 +21,7 @@ class TestCustomerIndexBuilder(TestCase):
 
     def test_customer_index_builder_sorted(self) -> None:
         cohort_index_two_cohorts = utils.cohort_index_builder(
-            customers.FIVE_ROWS_TWO_COHORTS_REVERSE).build_cohort_to_customer_range_index()
+            customers.FIVE_ROWS_TWO_COHORTS_REVERSE).build()
         builder = customer_cohort_index.CustomerIndexBuilder(cohort_index_two_cohorts)
 
         index = builder.build()
@@ -32,11 +32,11 @@ class TestCustomerIndexBuilder(TestCase):
 
     def test_find_cohort_id(self):
         cohort_index_two_cohorts = utils.cohort_index_builder(
-            customers.FIVE_ROWS_TWO_COHORTS).build_cohort_to_customer_range_index()
+            customers.FIVE_ROWS_TWO_COHORTS).build()
         builder = customer_cohort_index.CustomerIndexBuilder(cohort_index_two_cohorts)
 
         index = builder.build()
 
-        self.assertEqual(201527, index.get_cohort_id_by_customer_id(35411))
-        self.assertEqual(201532, index.get_cohort_id_by_customer_id(35414))
+        self.assertEqual(201527, index.try_get_cohort_id_by_customer_id(35411))
+        self.assertEqual(201532, index.try_get_cohort_id_by_customer_id(35414))
 

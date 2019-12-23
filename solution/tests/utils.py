@@ -4,7 +4,7 @@ import csv
 import io
 import os
 
-from src import cohort_customer_index
+from src import cohort_customer_segment_tree
 
 
 @contextlib.contextmanager
@@ -15,8 +15,8 @@ def suppress_stdout():
         yield
 
 
-def cohort_index_builder(customers_csv_string, timezone="-0500") -> cohort_customer_index.CohortIndexBuilder:
+def cohort_index_builder(customers_csv_string, timezone="-0500") -> cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilder:
     csv_file = io.StringIO(customers_csv_string)
     customers_csv_reader = csv.reader(csv_file)
-    return cohort_customer_index.CohortIndexBuilder(
+    return cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilder(
         customers_csv_reader, timezone)

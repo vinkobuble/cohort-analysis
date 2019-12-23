@@ -1,8 +1,6 @@
 from typing import Dict
 from unittest import TestCase
 
-# from src.cohort_analysis import Customers
-
 from src.main import parse_argv
 from tests import utils
 
@@ -13,12 +11,14 @@ class TestArgumentParsing(TestCase):
         fixtures: Dict[str: str] = {
             'customers_file_path': "customers.csv",
             'orders_file_path': "orders.csv",
+            'output_file_path': "output.csv",
             'timezone': "-0500"
         }
 
-        (customers_file_path, orders_file_path, timezone) = parse_argv(
+        (customers_file_path, orders_file_path, output_file_path, timezone) = parse_argv(
             f"""--customers-file={fixtures['customers_file_path']} 
             --orders-file={fixtures['orders_file_path']} 
+            --output-file={fixtures['output_file_path']} 
             --timezone={fixtures['timezone']}""".split()
         )
 
@@ -31,6 +31,7 @@ class TestArgumentParsing(TestCase):
              self.assertRaises(SystemExit) as systemExit:
             parse_argv(
                 f"""--orders-file=x
+                --output-file=x 
                 --timezone=-0500""".split()
             )
 
@@ -41,6 +42,18 @@ class TestArgumentParsing(TestCase):
              self.assertRaises(SystemExit) as systemExit:
             parse_argv(
                 f"""--customers-file=x
+                --output-file=x 
+                --timezone=-0500""".split()
+            )
+
+        self.assertEqual(2, systemExit.exception.code)
+
+    def test_missing_cl_argument_output_file(self):
+        with utils.suppress_stdout(), \
+             self.assertRaises(SystemExit) as systemExit:
+            parse_argv(
+                f"""--customers-file=x
+                --orders-file=x
                 --timezone=-0500""".split()
             )
 
@@ -51,6 +64,7 @@ class TestArgumentParsing(TestCase):
              self.assertRaises(SystemExit) as systemExit:
             parse_argv(
                 f"""--customers-file=x
+                    --output-file=x 
                     --orders-file=x""".split()
             )
 
