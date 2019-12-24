@@ -16,6 +16,7 @@ class TestMain(TestCase):
         orders_file_path = "./fixtures/orders_one_row.csv"
         output_file_path = "./temp/cohorts.csv"
         timezone = "-0500"
+        max_weeks = 8
 
         with mock.patch(
                 "src.cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilder",
@@ -38,7 +39,7 @@ class TestMain(TestCase):
                         return_value=mock.Mock())
                 ) as statistics_mock, \
                 mock.patch(
-                    "src.cohort_statistics.ReportGenerator",
+                    "src.report_generator.ReportGenerator",
                     mock.MagicMock(
                         return_value=mock.Mock())
                 ) as report_generator_mock, \
@@ -48,7 +49,7 @@ class TestMain(TestCase):
                         return_value=(customers_file_path,
                                       orders_file_path,
                                       output_file_path,
-                                      timezone))) as parse_argv_mock:
+                                      timezone, max_weeks))) as parse_argv_mock:
             main.main()
 
         sys.argv = prev_argv

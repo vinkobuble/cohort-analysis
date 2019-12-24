@@ -27,7 +27,7 @@ class TestUtils(TestCase):
         datetime_str = "2019-12-08 21:08:14"
         tz = utils.parse_timezone("-0500")
         self.assertEqual(datetime.strptime(datetime_str + "-0000", "%Y-%m-%d %H:%M:%S%z").astimezone(tz),
-                         utils.parse_datetime_with_timezone(datetime_str, tz))
+                         utils.parse_utc_datetime_with_timezone(datetime_str, tz))
 
     def test_comparison_mixin_lt(self):
         self.assertTrue(ComparisonImplementation(1) < ComparisonImplementation(2))

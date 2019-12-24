@@ -1,5 +1,7 @@
-from datetime import datetime, date, timedelta
+from datetime import date
+from typing import List, Dict, Tuple
 
+from src.utils import week_start_date
 import src.orders as orders
 import src.customer_cohort_index as customer_cohort_index
 import src.cohort_customer_segment_tree as cohort_customer_segment_tree
@@ -10,7 +12,8 @@ class CohortStatistics:
     @staticmethod
     def default_week_counter():
         return {
-            'user_id_set': cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilderRootNode()
+            'user_id_set': set(),
+            'unique_customers_count': None
         }
 
     @staticmethod
@@ -21,11 +24,15 @@ class CohortStatistics:
             'weeks': {}
         }
 
-    def __init__(self):
+    def __init__(self, config_max_weeks_range: int):
         self.cohorts = {}
         self.max_weeks_range = 0
+        self.config_max_weeks_range = config_max_weeks_range
 
     def add_order(self, cohort_id: int, user_id: int, week_id: int, order: orders.Order) -> None:
+        if self.config_max_weeks_range is not None and week_id - cohort_id >= self.config_max_weeks_range:
+            return
+
         if week_id - cohort_id > self.max_weeks_range:
             self.max_weeks_range = week_id - cohort_id
 
@@ -42,86 +49,57 @@ class CohortStatistics:
 
         week_counter = cohort['weeks'][week_id]
 
-        week_counter['user_id_set'].add_customer(customer_id=user_id)
+        week_counter['user_id_set'].add(user_id)
+
+    def post_processing(self, reverse_cohort_ids: List[int]) -> None:
+        for cohort_id in reverse_cohort_ids:
+            if cohort_id in self.cohorts:
+                cohort = self.cohorts[cohort_id]
+                self._post_process_weeks(cohort['weeks'])
+
+    @staticmethod
+    def _post_process_weeks(weeks: Dict[int, object]) -> None:
+        week_ids = list(weeks.keys())
+        week_ids.sort()
+
+        accumulated_user_set = set()
+        for week_id in week_ids:
+            week = weeks[week_id]
+            week_user_id_unique_set = week['user_id_set'] - accumulated_user_set
+
+            week['unique_customers_count'] = len(week_user_id_unique_set)
+
+            accumulated_user_set |= week_user_id_unique_set
 
 
 class CohortStatisticsAggregator:
 
     def __init__(self, orders_reader: orders.OrdersReader,
-                 customer_index: customer_cohort_index.CustomerSegmentsCohortIndex):
+                 customer_index: customer_cohort_index.CustomerSegmentsCohortIndex, max_weeks: int):
         self.orders_reader = orders_reader
         self.customer_index = customer_index
+        self.max_weeks = max_weeks
 
     @staticmethod
-    def calculate_order_week_id(order_create_date: datetime) -> int:
-        return order_create_date.year * 100 + \
-               order_create_date.isocalendar()[1]
+    def calculate_order_week_id(order_create_date: date) -> int:
+        week_start = week_start_date(order_create_date)
+        return week_start.year * 100 + \
+               week_start.isocalendar()[1]
 
     def aggregate(self) -> CohortStatistics:
-        statistics = CohortStatistics()
+        statistics = CohortStatistics(self.max_weeks)
         for order in self.orders_reader.orders():
             cohort_id = self.customer_index.try_get_cohort_id_by_customer_id(order.user_id)
             if cohort_id is None:
                 continue
 
-            week_id = CohortStatisticsAggregator.calculate_order_week_id(order.created)
+            week_id = CohortStatisticsAggregator.calculate_order_week_id(order.created.date())
 
             if week_id < cohort_id:
                 continue
 
             statistics.add_order(cohort_id=cohort_id, user_id=order.user_id, week_id=week_id, order=order)
 
+        statistics.post_processing(self.customer_index.reverse_cohort_ids)
+
         return statistics
-
-
-class ReportGenerator:
-
-    def __init__(self, statistics: CohortStatistics, cohort_index: customer_cohort_index.CustomerSegmentsCohortIndex,
-                 csv_writer):
-        self.statistics = statistics
-        self.cohort_index = cohort_index
-        self.csv_writer = csv_writer
-
-        self._write_header()
-
-    def _write_header(self):
-        week_rows = [f"{week_index * 7}-{week_index * 7 + 6} days" for week_index in
-                     range(self.statistics.max_weeks_range + 1)]
-        self.csv_writer.writerow(["Cohort", "Customers"] + week_rows)
-
-    def _print_row(self, cohort_id: int) -> None:
-
-        if cohort_id not in self.statistics.cohorts:
-            return
-
-        def format_date(d: date) -> str:
-            return f"{d.month}/{d.day}"
-
-        row = []
-
-        cohort_node = self.cohort_index.cohorts[cohort_id]
-
-        # Cohort start/end day
-        row.append(f"{format_date(cohort_node.week_start)} - {format_date(cohort_node.week_start + timedelta(days=6))}")
-
-        # Total number of customers
-        total_user_count = cohort_node.get_unique_customer_count()
-        row.append(str(total_user_count) + " customers")
-
-        cohort_stats = self.statistics.cohorts[cohort_id]
-
-        min_week_id = cohort_stats['min_week_id']
-        max_week_id = cohort_stats['max_week_id']
-        row_weeks = ["" for i in range(max_week_id - min_week_id + 1)]
-
-        for week_id, week_counter in cohort_stats['weeks'].items():
-            week_index = week_id - min_week_id
-            user_count = week_counter['user_id_set'].get_unique_customer_count()
-            percent = user_count / total_user_count
-            row_weeks[week_index] = f"{percent:.2%} orderers ({user_count})"
-
-        self.csv_writer.writerow(row + row_weeks)
-
-    def export_to_csv_file(self) -> None:
-        for cohort_id in self.cohort_index.reverse_cohort_keys:
-            self._print_row(cohort_id)

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from datetime import date
-from typing import Dict, Tuple, List
+from typing import Dict, List
 from bisect import bisect
 
 import src.cohort_customer_segment_tree as cohort_customer_segment_tree
@@ -15,7 +14,7 @@ class CustomerSegmentsCohortIndex:
                  reverse_cohort_keys: List[int]):
         self.cohort_index = cohort_index
         self.cohorts = cohorts
-        self.reverse_cohort_keys = reverse_cohort_keys
+        self.reverse_cohort_ids = reverse_cohort_keys
 
     def try_get_cohort_id_by_customer_id(self, customer_id: int) -> int:
         index = bisect(self.cohort_index,

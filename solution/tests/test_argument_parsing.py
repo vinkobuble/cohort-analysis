@@ -15,7 +15,7 @@ class TestArgumentParsing(TestCase):
             'timezone': "-0500"
         }
 
-        (customers_file_path, orders_file_path, output_file_path, timezone) = parse_argv(
+        (customers_file_path, orders_file_path, output_file_path, timezone, max_weeks) = parse_argv(
             f"""--customers-file={fixtures['customers_file_path']} 
             --orders-file={fixtures['orders_file_path']} 
             --output-file={fixtures['output_file_path']} 

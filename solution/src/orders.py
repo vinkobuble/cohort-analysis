@@ -1,7 +1,7 @@
 import collections.abc as collections
 from datetime import datetime
 
-from src.utils import parse_timezone, parse_datetime_with_timezone
+from src.utils import parse_timezone, parse_utc_datetime_with_timezone
 
 
 class Order:
@@ -20,6 +20,6 @@ class OrdersReader:
 
     def orders(self):
         for row in self.orders_csv_reader:
-            yield Order(int(row[2]), parse_datetime_with_timezone(row[3], self.timezone))
+            yield Order(int(row[2]), parse_utc_datetime_with_timezone(row[3], self.timezone))
 
 

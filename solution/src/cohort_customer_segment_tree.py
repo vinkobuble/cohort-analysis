@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, date
 from typing import Dict, Tuple, List, Callable
 from bisect import bisect
 
-from src.utils import ComparisonMixin, parse_timezone, parse_datetime_with_timezone
+from src.utils import ComparisonMixin, parse_timezone, parse_utc_datetime_with_timezone, week_start_date
 
 
 # This cohort algorithm assumes that function
@@ -305,7 +305,8 @@ class CohortCustomerSegmentsTreeBuilderRootNode(ComparisonMixin):
             self.root_node = CohortCustomerSegmentsTreeBuilderNode(customer_id)
         elif customer_id + 1 < self.root_node.segment[0]:
             self.root_node = CohortCustomerSegmentsTreeBuilderNode(customer_id, self.root_node)
-        elif not self.root_node.try_expand_segment_start(customer_id):
+        elif not self.root_node.try_expand_segment_start(customer_id) and \
+                not self.root_node.has_customer_id(customer_id):
             self.root_node.add_customer(customer_id)
 
     def has_customer_id(self, customer_id: int) -> bool:
@@ -417,7 +418,7 @@ class CohortCustomerSegmentsTreeBuilder:
         Read CSV rows, convert, and call add_customer for each.
         """
         for row in self.customers_csv_reader:
-            self.add_customer(int(row[0]), parse_datetime_with_timezone(date_str=row[1], timezone=self.timezone))
+            self.add_customer(int(row[0]), parse_utc_datetime_with_timezone(date_str=row[1], timezone=self.timezone))
 
         self.flatten()
 
@@ -431,12 +432,12 @@ class CohortCustomerSegmentsTreeBuilder:
         :param customer_id: customer ID being added.
         :param customer_creation_date: date customer was added to the system. Used to calculate cohort ID.
         """
+        week_start = week_start_date(customer_creation_date.date())
         customer_cohort_id = CohortCustomerSegmentsTreeBuilder.customer_create_date_cohort_id(
-            customer_create_date=customer_creation_date.date())
+            customer_create_date=week_start)
         cohort_customer_id_segment_node = self.cohorts.get(
             customer_cohort_id, None)
         if cohort_customer_id_segment_node is None:
-            week_start = customer_creation_date.date() - timedelta(days=customer_creation_date.weekday())
             self.cohorts[customer_cohort_id] = \
                 CohortCustomerSegmentsTreeBuilderRootNodeWithCohortInfo(
                     customer_id=customer_id,

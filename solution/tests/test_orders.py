@@ -3,7 +3,7 @@ import io
 from unittest import TestCase
 
 import tests.fixtures.orders as orders_fixtures
-from src.utils import parse_datetime_with_timezone, parse_timezone
+from src.utils import parse_utc_datetime_with_timezone, parse_timezone
 
 import src.orders as orders
 
@@ -17,7 +17,7 @@ class TestOrders(TestCase):
         orders_reader = orders.OrdersReader(orders_csv_reader, timezone)
         for order in orders_reader.orders():
             self.assertEqual(344, order.user_id)
-            self.assertEqual(parse_datetime_with_timezone("2014-10-28 00:20:01", parse_timezone(timezone)),
+            self.assertEqual(parse_utc_datetime_with_timezone("2014-10-28 00:20:01", parse_timezone(timezone)),
                              order.created)
 
     def test_orders_read_three_rows(self):
