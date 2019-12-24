@@ -30,4 +30,3 @@ class TestOrders(TestCase):
             count += 1
 
         self.assertEqual(3, count)
-

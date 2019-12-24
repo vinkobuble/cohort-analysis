@@ -12,28 +12,31 @@ class TestCustomerIndexBuilder(TestCase):
         customer_cohort_index.CustomerIndexBuilder([])
 
     def test_customer_index_builder_build(self) -> None:
-        cohort_index = utils.cohort_index_builder(customers.FIVE_ROWS).build()
-        builder = customer_cohort_index.CustomerIndexBuilder(cohort_index)
+        cohort_builder = utils.cohort_index_builder(customers.FIVE_ROWS)
+        cohort_builder.build()
+        builder = customer_cohort_index.CustomerIndexBuilder(cohort_builder.cohorts)
 
         index = builder.build()
 
-        self.assertEqual(1, len(index.segments))
+        self.assertEqual(1, len(index.cohorts))
 
     def test_customer_index_builder_sorted(self) -> None:
-        cohort_index_two_cohorts = utils.cohort_index_builder(
-            customers.FIVE_ROWS_TWO_COHORTS_REVERSE).build()
-        builder = customer_cohort_index.CustomerIndexBuilder(cohort_index_two_cohorts)
+        cohort_builder = utils.cohort_index_builder(
+            customers.FIVE_ROWS_TWO_COHORTS_REVERSE)
+        cohort_builder.build()
+        builder = customer_cohort_index.CustomerIndexBuilder(cohort_builder.cohorts)
 
         index = builder.build()
 
-        self.assertEqual(2, len(index.segments))
-        self.assertLess(index.segments[0].root_node.subtree_customer_id_segment[0],
-                        index.segments[1].root_node.subtree_customer_id_segment[0])
+        self.assertEqual(2, len(index.cohorts))
+        self.assertLess(index.cohort_index[0].root_node.subtree_range[0],
+                        index.cohort_index[1].root_node.subtree_range[0])
 
     def test_find_cohort_id(self):
-        cohort_index_two_cohorts = utils.cohort_index_builder(
-            customers.FIVE_ROWS_TWO_COHORTS).build()
-        builder = customer_cohort_index.CustomerIndexBuilder(cohort_index_two_cohorts)
+        cohort_builder = utils.cohort_index_builder(
+            customers.FIVE_ROWS_TWO_COHORTS)
+        cohort_builder.build()
+        builder = customer_cohort_index.CustomerIndexBuilder(cohort_builder.cohorts)
 
         index = builder.build()
 

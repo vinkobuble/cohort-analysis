@@ -1,10 +1,8 @@
 import collections.abc as collections
-import csv
 import sys
 from unittest import TestCase, mock
 
 import src.main as main
-import src.cohort_customer_segment_tree as cohort_customer_index
 
 
 class TestMain(TestCase):
@@ -18,8 +16,9 @@ class TestMain(TestCase):
         orders_file_path = "./fixtures/orders_one_row.csv"
         output_file_path = "./temp/cohorts.csv"
         timezone = "-0500"
+
         with mock.patch(
-                "src.cohort_customer_index.CohortIndexBuilder",
+                "src.cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilder",
                 mock.MagicMock(
                     return_value=mock.Mock())
         ) as cohort_index_builder_mock, \
@@ -39,6 +38,11 @@ class TestMain(TestCase):
                         return_value=mock.Mock())
                 ) as statistics_mock, \
                 mock.patch(
+                    "src.cohort_statistics.ReportGenerator",
+                    mock.MagicMock(
+                        return_value=mock.Mock())
+                ) as report_generator_mock, \
+                mock.patch(
                     "src.main.parse_argv",
                     mock.MagicMock(
                         return_value=(customers_file_path,
@@ -53,6 +57,7 @@ class TestMain(TestCase):
         customer_index_builder_mock.assert_called_once()
         orders_reader_mock.assert_called_once()
         statistics_mock.assert_called_once()
+        report_generator_mock.assert_called_once()
 
         self.assertEqual(2, len(cohort_index_builder_mock.call_args[0]))
 

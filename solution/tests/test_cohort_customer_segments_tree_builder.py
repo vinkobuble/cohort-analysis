@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict
+from typing import Dict, List, Tuple
 from unittest import TestCase, mock
 import csv
 import io
@@ -34,7 +34,7 @@ class TestCohortCustomerIndexBuilder(TestCase):
             customers_csv_reader, "-0500")
         self.assertEqual(customers_csv_reader, tree_builder.customers_csv_reader)
         self.assertEqual(parse_timezone("-0500"), tree_builder.timezone)
-        self.assertEqual(tree_builder.cohort_id_to_customer_id_ranges, {})
+        self.assertEqual(tree_builder.cohorts, {})
         self.assertEqual(["id", "created"], tree_builder.header_row)
 
     def test_build_cohort_index_the_first_row(self) -> None:
@@ -69,115 +69,119 @@ class TestCohortCustomerIndexBuilder(TestCase):
         tree_builder = cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilder(io.StringIO("x"), "-0500")
 
         tree_builder.add_customer(10, self.cohort_date)
-        self.assertIn(self.cohort_id, tree_builder.cohort_id_to_customer_id_ranges)
+        self.assertIn(self.cohort_id, tree_builder.cohorts)
         self.assertEqual(cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilderNode(10),
-                         tree_builder.cohort_id_to_customer_id_ranges[self.cohort_id].root_node)
+                         tree_builder.cohorts[self.cohort_id].root_node)
 
         tree_builder.add_customer(11, self.cohort_date)
-        self.assertIn(self.cohort_id, tree_builder.cohort_id_to_customer_id_ranges)
+        self.assertIn(self.cohort_id, tree_builder.cohorts)
         self.assertEqual((10, 11),
-                         tree_builder.cohort_id_to_customer_id_ranges[
-                             self.cohort_id].root_node.customer_id_segment)
+                         tree_builder.cohorts[
+                             self.cohort_id].root_node.subtree_range)
 
         tree_builder.add_customer(9, self.cohort_date)
-        self.assertIn(self.cohort_id, tree_builder.cohort_id_to_customer_id_ranges)
+        self.assertIn(self.cohort_id, tree_builder.cohorts)
         self.assertEqual((9, 11),
-                         tree_builder.cohort_id_to_customer_id_ranges[
-                             self.cohort_id].root_node.customer_id_segment)
+                         tree_builder.cohorts[
+                             self.cohort_id].root_node.subtree_range)
 
         tree_builder.add_customer(13, self.cohort_date)
-        self.assertIn(self.cohort_id, tree_builder.cohort_id_to_customer_id_ranges)
-        self.assertEqual((9, 11),
-                         tree_builder.cohort_id_to_customer_id_ranges[
-                             self.cohort_id].root_node.customer_id_segment)
+        self.assertIn(self.cohort_id, tree_builder.cohorts)
+        self.assertEqual((9, 13),
+                         tree_builder.cohorts[
+                             self.cohort_id].root_node.subtree_range)
         self.assertEqual(1,
-                         len(tree_builder.cohort_id_to_customer_id_ranges[self.cohort_id].root_node.subtree))
+                         len(tree_builder.cohorts[self.cohort_id].root_node.subtree))
 
         tree_builder.add_customer(7, self.cohort_date)
-        self.assertIn(self.cohort_id, tree_builder.cohort_id_to_customer_id_ranges)
+        self.assertIn(self.cohort_id, tree_builder.cohorts)
         self.assertEqual(cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilderNode(7),
-                         tree_builder.cohort_id_to_customer_id_ranges[self.cohort_id].root_node)
-        self.assertEqual(1,
-                         len(tree_builder.cohort_id_to_customer_id_ranges[self.cohort_id].root_node.subtree))
+                         tree_builder.cohorts[self.cohort_id].root_node)
+        self.assertEqual(2,
+                         len(tree_builder.cohorts[self.cohort_id].root_node.subtree))
 
     def test_build_cohort_index_five_rows_one_cohort(self) -> None:
         tree_builder = utils.cohort_index_builder(customers.FIVE_ROWS_ONE_COHORT)
         tree_builder.build()
 
-        self.assertEqual(1, len(tree_builder.cohort_id_to_customer_id_ranges))
+        self.assertEqual(1, len(tree_builder.cohorts))
         customer_id_range_nodes = \
-            list(tree_builder.cohort_id_to_customer_id_ranges.values())[
+            list(tree_builder.cohorts.values())[
                 0]
         self.assertEqual((35410, 35414),
-                         customer_id_range_nodes.root_node.customer_id_segment)
+                         customer_id_range_nodes.root_node.subtree_range)
 
     def test_build_cohort_index_five_rows_two_cohorts(self):
         tree_builder = utils.cohort_index_builder(customers.FIVE_ROWS_TWO_COHORTS)
         tree_builder.build()
 
-        self.assertEqual(2, len(tree_builder.cohort_id_to_customer_id_ranges))
+        self.assertEqual(2, len(tree_builder.cohorts))
         self.assertTupleEqual((35410, 35411),
-                              tree_builder.cohort_id_to_customer_id_ranges[
-                                  201527].root_node.customer_id_segment)
+                              tree_builder.cohorts[
+                                  201527].root_node.subtree_range)
         self.assertTupleEqual((35412, 35414),
-                              tree_builder.cohort_id_to_customer_id_ranges[
-                                  201532].root_node.customer_id_segment)
+                              tree_builder.cohorts[
+                                  201532].root_node.subtree_range)
 
     def test_build_cohort_index_five_rows_two_timezone_cohorts(self):
         tree_builder = utils.cohort_index_builder(customers.FIVE_ROWS_TWO_TIMEZONE_COHORTS)
         tree_builder.build()
 
-        self.assertEqual(2, len(tree_builder.cohort_id_to_customer_id_ranges))
+        self.assertEqual(2, len(tree_builder.cohorts))
         self.assertTupleEqual((35410, 35411),
-                              tree_builder.cohort_id_to_customer_id_ranges[
-                                  201527].root_node.customer_id_segment)
+                              tree_builder.cohorts[
+                                  201527].root_node.subtree_range)
         self.assertTupleEqual((35412, 35414),
-                              tree_builder.cohort_id_to_customer_id_ranges[
-                                  201528].root_node.customer_id_segment)
+                              tree_builder.cohorts[
+                                  201528].root_node.subtree_range)
 
     def test_build_cohort_index_five_rows_two_overlapping_cohorts(self):
         tree_builder = utils.cohort_index_builder(customers.FIVE_ROWS_TWO_OVERLAPPING_COHORTS)
         tree_builder.build()
 
-        self.assertEqual(2, len(tree_builder.cohort_id_to_customer_id_ranges))
-        self.assertTupleEqual((35410, 35410),
-                              tree_builder.cohort_id_to_customer_id_ranges[201527].root_node
-                              .customer_id_segment)
-        self.assertEqual(1, len(tree_builder.cohort_id_to_customer_id_ranges[201527].root_node.subtree))
+        self.assertEqual(2, len(tree_builder.cohorts))
+        self.assertTupleEqual((35410, 35413),
+                              tree_builder.cohorts[201527].root_node
+                              .subtree_range)
+        self.assertEqual(1, len(tree_builder.cohorts[201527].root_node.subtree))
         self.assertTupleEqual((35413, 35413),
-                              tree_builder.cohort_id_to_customer_id_ranges[201527].root_node.subtree
-                              [0].customer_id_segment)
-        self.assertTupleEqual((35411, 35412),
-                              tree_builder.cohort_id_to_customer_id_ranges[201533].root_node
-                              .customer_id_segment)
-        self.assertEqual(1, len(tree_builder.cohort_id_to_customer_id_ranges[
+                              tree_builder.cohorts[201527].root_node.subtree
+                              [0].subtree_range)
+        self.assertTupleEqual((35411, 35414),
+                              tree_builder.cohorts[201533].root_node
+                              .subtree_range)
+        self.assertEqual(1, len(tree_builder.cohorts[
                                     201533].root_node.subtree))
         self.assertTupleEqual((35414, 35414),
-                              tree_builder.cohort_id_to_customer_id_ranges[201533].root_node.subtree
-                              [0].customer_id_segment)
+                              tree_builder.cohorts[201533].root_node.subtree
+                              [0].subtree_range)
 
     def test_build_cohort_index_five_rows_one_merged_cohort(self):
         tree_builder = utils.cohort_index_builder(customers.FIVE_ROWS_ONE_COHORT_MULTI_SEGMENTS)
         tree_builder.build()
 
-        self.assertEqual(1, len(tree_builder.cohort_id_to_customer_id_ranges))
+        self.assertEqual(1, len(tree_builder.cohorts))
         self.assertTupleEqual((35410, 35414),
-                              tree_builder.cohort_id_to_customer_id_ranges[201527].root_node
-                              .customer_id_segment)
+                              tree_builder.cohorts[201527].root_node
+                              .subtree_range)
         self.assertTupleEqual((35410, 35414),
-                              tree_builder.cohort_id_to_customer_id_ranges[201527].root_node
-                              .subtree_customer_id_segment)
-        self.assertEqual(0, len(tree_builder.cohort_id_to_customer_id_ranges[201527].root_node.subtree))
+                              tree_builder.cohorts[201527].root_node
+                              .subtree_range)
+        self.assertEqual(0, len(tree_builder.cohorts[201527].root_node.subtree))
 
-    def test_building_full_tree(self):
+    def test_building_full_tree_no_flatten(self):
         customers_file_path = "../e2e/fixtures/customers.csv"
         timezone = "-0500"
-        with open(customers_file_path) as customers_csv_file:
+        with open(customers_file_path) as customers_csv_file, mock.patch.object(
+                cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilder, "flatten",
+                mock.MagicMock(return_value=None)) as flatten_mock:
             tree_builder = cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilder(
                 csv.reader(customers_csv_file), timezone)
             tree_builder.build()
 
-        self.validate_cohort_customer_tree(tree_builder.cohort_id_to_customer_id_ranges)
+        flatten_mock.assert_called_once()
+
+        self.validate_cohort_customer_tree(tree_builder.cohorts)
 
     def validate_cohort_customer_tree_node(self,
                                            node: cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilderNode):
@@ -191,6 +195,7 @@ class TestCohortCustomerIndexBuilder(TestCase):
         try:
             if len(node.subtree) > 0:
                 self.assertLess(node.segment[1] + 1, node.subtree[0].segment[0])
+                self.assertEqual(0, len(node.subtree[-1].subtree))
         except AssertionError as err:
             raise err
 
@@ -211,3 +216,33 @@ class TestCohortCustomerIndexBuilder(TestCase):
                                       ) -> None:
         for root_node in cohort_customer_tree.values():
             self.validate_cohort_customer_tree_node(root_node.root_node)
+
+    def test_building_full_tree_with_flatten(self):
+        customers_file_path = "../e2e/fixtures/customers.csv"
+        timezone = "-0500"
+        with open(customers_file_path) as customers_csv_file:
+            tree_builder = cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilder(
+                csv.reader(customers_csv_file), timezone)
+            tree_builder.build()
+
+        self.validate_flatten_tree(tree_builder.cohorts)
+
+    def validate_flatten_tree(self,
+                              cohort_customer_tree:
+                              Dict[int,
+                                   cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilderRootNode]
+                              ) -> None:
+
+        for root_node in cohort_customer_tree.values():
+            self.validate_flatten_tree_node(root_node.segments, root_node.root_node.subtree_range)
+
+    def validate_flatten_tree_node(self, segments: List[Tuple[int, int]], cohort_range: Tuple[int, int]):
+
+        try:
+            self.assertEqual(cohort_range, (segments[0][0], segments[-1][1]))
+            for i in range(len(segments) - 1):
+                self.assertLess(segments[i][1] + 1,
+                                segments[i + 1][0])
+        except AssertionError as err:
+            raise err
+

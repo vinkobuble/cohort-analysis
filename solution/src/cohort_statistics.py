@@ -1,10 +1,8 @@
-import sys
 from datetime import datetime, date, timedelta
-from typing import Dict
 
 import src.orders as orders
 import src.customer_cohort_index as customer_cohort_index
-import src.cohort_customer_segment_tree as cohort_customer_index
+import src.cohort_customer_segment_tree as cohort_customer_segment_tree
 
 
 class CohortStatistics:
@@ -12,7 +10,7 @@ class CohortStatistics:
     @staticmethod
     def default_week_counter():
         return {
-            'user_id_set': cohort_customer_index.CohortCustomerSegmentsTreeBuilderRootNode()
+            'user_id_set': cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilderRootNode()
         }
 
     @staticmethod
@@ -28,12 +26,11 @@ class CohortStatistics:
         self.max_weeks_range = 0
 
     def add_order(self, cohort_id: int, user_id: int, week_id: int, order: orders.Order) -> None:
-        if cohort_id not in self.cohorts:
-            self.cohorts[cohort_id] = CohortStatistics.default_cohort_counter()
-
         if week_id - cohort_id > self.max_weeks_range:
             self.max_weeks_range = week_id - cohort_id
 
+        if cohort_id not in self.cohorts:
+            self.cohorts[cohort_id] = CohortStatistics.default_cohort_counter()
         cohort = self.cohorts[cohort_id]
         if cohort['min_week_id'] is None or cohort['min_week_id'] > week_id:
             cohort['min_week_id'] = week_id
@@ -79,7 +76,7 @@ class CohortStatisticsAggregator:
 
 class ReportGenerator:
 
-    def __init__(self, statistics: CohortStatistics, cohort_index: cohort_customer_index.CohortCustomerSegmentsIndex,
+    def __init__(self, statistics: CohortStatistics, cohort_index: customer_cohort_index.CustomerSegmentsCohortIndex,
                  csv_writer):
         self.statistics = statistics
         self.cohort_index = cohort_index
@@ -102,7 +99,7 @@ class ReportGenerator:
 
         row = []
 
-        cohort_node = self.cohort_index.cohort_id_to_customer_id_ranges[cohort_id]
+        cohort_node = self.cohort_index.cohorts[cohort_id]
 
         # Cohort start/end day
         row.append(f"{format_date(cohort_node.week_start)} - {format_date(cohort_node.week_start + timedelta(days=6))}")
@@ -126,6 +123,5 @@ class ReportGenerator:
         self.csv_writer.writerow(row + row_weeks)
 
     def export_to_csv_file(self) -> None:
-        cohort_ids = self.cohort_index.get_reverse_sorted_cohort_ids()
-        for cohort_id in cohort_ids:
+        for cohort_id in self.cohort_index.reverse_cohort_keys:
             self._print_row(cohort_id)
