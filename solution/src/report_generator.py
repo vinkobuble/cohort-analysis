@@ -60,9 +60,6 @@ class ReportGenerator:
         self.csv_writer.writerow(row_users + row_weeks1)
         self.csv_writer.writerow(["", ""] + row_weeks2)
 
-
-
-
     def export_to_csv_file(self) -> None:
         for cohort_id in self.cohort_index.reverse_cohort_ids:
             self._print_row(cohort_id)

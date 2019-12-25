@@ -84,15 +84,6 @@ class CohortCustomerSegmentsTreeBuilderNode(ComparisonMixin):
         if customer_id > self.subtree_range[1]:
             self.subtree_range = (self.subtree_range[0], customer_id)
 
-    def _expand_subtree_range_start(self, customer_id: int) -> None:
-        """
-        The total subtree range start has been expanded.
-
-        :param customer_id: the incoming customer_id.
-        """
-
-        self.subtree_range = (customer_id, self.subtree_range[1])
-
     def _expand_last_node_children(self) -> None:
         """
         We have to add the last node children to the parent node to maintain the tree structure consistency.
@@ -158,16 +149,13 @@ class CohortCustomerSegmentsTreeBuilderNode(ComparisonMixin):
         :param index: Index of the lower node of the two being merged. The caller ensures 0 <= index < len - 1.
         """
 
-        if self.subtree[index].subtree_range[1] + 1 == \
-                self.subtree[index + 1].subtree_range[0]:
+        if self.subtree[index].subtree_range[1] + 1 == self.subtree[index + 1].subtree_range[0]:
             # Take reference to the upper (right) node to update its segments afterward.
             # We actually do not know which node will be removed, the lower or one of nodes in the subtree.
             new_node = self.subtree[index + 1]
             removed_last_node = self._remove_last_node(index)
-            new_node.segment = (
-                removed_last_node.segment[0], new_node.segment[1])
-            new_node.subtree_range = (
-                removed_last_node.segment[0], new_node.subtree_range[1])
+            new_node.segment = (removed_last_node.segment[0], new_node.segment[1])
+            new_node.subtree_range = (removed_last_node.segment[0], new_node.subtree_range[1])
 
     def _try_merge_with_first_child(self) -> None:
         """
@@ -194,7 +182,7 @@ class CohortCustomerSegmentsTreeBuilderNode(ComparisonMixin):
 
         if customer_id + 1 == self.segment[0]:
             self.segment = (customer_id, self.segment[1])
-            self._expand_subtree_range_start(customer_id)
+            self.subtree_range = (customer_id, self.subtree_range[1])
             return True
         return False
 
@@ -214,7 +202,6 @@ class CohortCustomerSegmentsTreeBuilderNode(ComparisonMixin):
 
         if customer_id - 1 == self.segment[1]:
             self.segment = (self.segment[0], customer_id)
-            self._try_expand_subtree_range_maximum(customer_id)
             if len(self.subtree) > 0:
                 self._try_merge_with_first_child()
             elif try_merge_with_next_sibling is not None:
@@ -264,39 +251,36 @@ class CohortCustomerSegmentsTreeBuilderNode(ComparisonMixin):
         # Find the index of the first child that has the lower segment boundary greater than customer_id
         # subtree[insertion_index - 1].segment[0] < customer_id < subtree[insertion_index].segment[0]
         insertion_index = bisect(self.subtree, CohortCustomerSegmentsTreeBuilderNode(customer_id))
+        is_beyond_last = insertion_index == len(self.subtree)
 
-        # Bisect said customer_id is greater than all children segment starts.
-        if insertion_index == len(self.subtree):
+        # `bisect` returned customer_id greater than all children segment starts.
+        # '+ 1' tells us that we will be able to expand the last child segment instead of appending a new element.
+        if is_beyond_last and customer_id > self.subtree[-1].subtree_range[1] + 1:
             # Customer_id still might be in the range of the last child segment.
-            # Append new child with (customer_id, customer_id) to the end only if customer_id is
-            # outside the last child segment.
-            # '+ 1' tells us that we will be able to expand the last child segment
-            if customer_id <= self.subtree[-1].subtree_range[1] + 1:
-                self.subtree[-1].add_customer(customer_id, try_merge_with_next_sibling)
-                self._expand_last_node_children()
-            else:
-                # This is the place where having a tree pays off: this is O(1),
-                # otherwise would be list.insert with O(N).
-                self.subtree.append(CohortCustomerSegmentsTreeBuilderNode(customer_id))
-                if try_merge_with_next_sibling is not None:
-                    try_merge_with_next_sibling()
+            # then append new child with (customer_id, customer_id) as the last child.
+            # This is the place where having a tree pays off: this is O(1),
+            # otherwise would be list.insert with O(N).
+            self.subtree.append(CohortCustomerSegmentsTreeBuilderNode(customer_id))
+            if try_merge_with_next_sibling is not None:
+                try_merge_with_next_sibling()
             return
 
-        # nNw we focus on the last child with lower start segment start than customer_id.
+        # Now, we focus on the previous child.
+        # That is the last child with segment start lower than customer_id, or `insertion_index - 1`
         if insertion_index > 0:
-            # First check if we can simply extend it and maybe merge it with its next sibling.
-            if not self.subtree[insertion_index - 1]. \
-                    _try_expand_segment_end(customer_id,
-                                            lambda: self._try_merge_nodes_with_adjacent_segments(insertion_index - 1)):
-                # Otherwise, call generic add_customer to it with the access to merging with its sibling.
-                self.subtree[insertion_index - 1]. \
-                    add_customer(customer_id,
-                                 lambda: self._try_merge_nodes_with_adjacent_segments(insertion_index - 1))
+            self.subtree[insertion_index - 1]. \
+                add_customer(customer_id,
+                             try_merge_with_next_sibling if is_beyond_last else
+                             lambda: self._try_merge_nodes_with_adjacent_segments(insertion_index - 1))
+            if is_beyond_last:
+                self._expand_last_node_children()
             return
 
         # The only case left is the first child has a greater lower boundary than customer_id.
         # If we cannot just expand the lower boundary,
         # we need to have the first child with segment (customer_id, customer_id).
+        # This is the place where having a tree pays off: this is O(1),
+        # otherwise it would be list.insert with O(N).
         if not self.subtree[0].try_expand_segment_start(customer_id):
             self.subtree[0] = CohortCustomerSegmentsTreeBuilderNode(customer_id, self.subtree[0])
 
@@ -548,6 +532,7 @@ class CohortCustomerSegmentsTreeBuilder:
         """
 
         for row in self.customers_csv_reader:
+            # TODO: customer object and parser factory
             self.add_customer(int(row[0]), parse_utc_datetime_with_timezone(date_str=row[1], timezone=self.timezone))
 
         self.flatten()
