@@ -62,8 +62,8 @@ class TestCohortStatistics(TestCase):
         weeks_counters = list(statistics.cohorts.values())[0]['weeks']
         self.assertEqual(2, len(weeks_counters.values()))
 
-        unique_customers_count_1 = list(weeks_counters.values())[0]['unique_customers_count']
-        unique_customers_count_2 = list(weeks_counters.values())[1]['unique_customers_count']
+        unique_customers_count_1 = list(weeks_counters.values())[0]['1st_time_unique_customers_count']
+        unique_customers_count_2 = list(weeks_counters.values())[1]['1st_time_unique_customers_count']
 
         self.assertEqual(1, unique_customers_count_1)
         self.assertEqual(1, unique_customers_count_2)
@@ -91,8 +91,8 @@ class TestCohortStatistics(TestCase):
         weeks_counters = list(statistics.cohorts.values())[0]['weeks']
         self.assertEqual(2, len(weeks_counters.values()))
 
-        unique_customers_count_1 = list(weeks_counters.values())[0]['unique_customers_count']
-        unique_customers_count_2 = list(weeks_counters.values())[1]['unique_customers_count']
+        unique_customers_count_1 = list(weeks_counters.values())[0]['1st_time_unique_customers_count']
+        unique_customers_count_2 = list(weeks_counters.values())[1]['1st_time_unique_customers_count']
 
         self.assertEqual(2, unique_customers_count_1)
         self.assertEqual(3, unique_customers_count_2)
@@ -120,8 +120,8 @@ class TestCohortStatistics(TestCase):
         weeks_counters = list(statistics.cohorts.values())[0]['weeks']
         self.assertEqual(2, len(weeks_counters.values()))
 
-        unique_customers_count_1 = list(weeks_counters.values())[0]['unique_customers_count']
-        unique_customers_count_2 = list(weeks_counters.values())[1]['unique_customers_count']
+        unique_customers_count_1 = list(weeks_counters.values())[0]['1st_time_unique_customers_count']
+        unique_customers_count_2 = list(weeks_counters.values())[1]['1st_time_unique_customers_count']
 
         self.assertEqual(2, unique_customers_count_1)
         self.assertEqual(3, unique_customers_count_2)

@@ -53,8 +53,9 @@ class ReportGenerator:
             percent_users = user_count / total_user_count
             row_weeks1[week_index] = f"{percent_users:.2%} orderers ({user_count})"
 
-            percent_unique_users = week_counter['unique_customers_count'] / total_user_count
-            row_weeks2[week_index] = f"{percent_unique_users:.2%} 1st time ({week_counter['unique_customers_count']})"
+            percent_unique_users = week_counter['1st_time_unique_customers_count'] / total_user_count
+            row_weeks2[week_index] = f"{percent_unique_users:.2%} " \
+                                     f"1st time ({week_counter['1st_time_unique_customers_count']})"
 
         self.csv_writer.writerow(row_users + row_weeks1)
         self.csv_writer.writerow(["", ""] + row_weeks2)
