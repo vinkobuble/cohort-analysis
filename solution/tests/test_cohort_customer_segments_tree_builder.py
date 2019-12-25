@@ -20,11 +20,11 @@ class TestCohortCustomerIndexBuilder(TestCase):
     def test_customer_creation_date_to_cohort_id(self) -> None:
         self.assertEqual(2019 * 100 + 51,
                          cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilder.
-                         customer_create_date_cohort_id(
+                         cohort_id_from_customer_create_date(
                              datetime.strptime("2019-12-21", "%Y-%m-%d")))
         self.assertEqual(2019 * 100 + 52,
                          cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilder.
-                         customer_create_date_cohort_id(
+                         cohort_id_from_customer_create_date(
                              datetime.strptime("2019-12-28", "%Y-%m-%d")))
 
     def test_constructor(self) -> None:

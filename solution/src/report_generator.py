@@ -33,7 +33,8 @@ class ReportGenerator:
         cohort_node = self.cohort_index.cohorts[cohort_id]
 
         # Cohort start/end day
-        row_users.append(f"{format_date(cohort_node.week_start)} - {format_date(cohort_node.week_start + timedelta(days=6))}")
+        row_users.append(f"{format_date(cohort_node.cohort_week_start)}"
+                         f" - {format_date(cohort_node.cohort_week_start + timedelta(days=6))}")
 
         # Total number of customers
         total_user_count = cohort_node.get_unique_customer_count()
