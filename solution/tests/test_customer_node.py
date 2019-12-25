@@ -26,9 +26,11 @@ class TestCustomerIdSegmentNode(unittest.TestCase):
         self.assertEqual((9, 10), node.segment)
         self.assertEqual((9, 10), node.subtree_range)
 
+        node._try_expand_subtree_range_maximum(11)
+        self.assertEqual((9, 11), node.subtree_range)
+
         self.assertTrue(node._try_expand_segment_end(11))
         self.assertEqual((9, 11), node.segment)
-        self.assertEqual((9, 11), node.subtree_range)
 
         self.assertFalse(node.try_expand_segment_start(7))
         self.assertFalse(node._try_expand_segment_end(13))

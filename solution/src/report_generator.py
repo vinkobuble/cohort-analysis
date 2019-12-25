@@ -11,6 +11,9 @@ class ReportGenerator:
                  csv_writer):
         self.statistics = statistics
         self.cohort_index = cohort_index
+        self.reverse_cohort_ids = list(cohort_index.cohorts.keys())
+        self.reverse_cohort_ids.sort(reverse=True)
+
         self.csv_writer = csv_writer
 
         self._write_header()
@@ -61,5 +64,5 @@ class ReportGenerator:
         self.csv_writer.writerow(["", ""] + row_weeks2)
 
     def export_to_csv_file(self) -> None:
-        for cohort_id in self.cohort_index.reverse_cohort_ids:
+        for cohort_id in self.reverse_cohort_ids:
             self._print_row(cohort_id)
