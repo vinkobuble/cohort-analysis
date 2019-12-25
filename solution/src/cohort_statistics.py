@@ -1,5 +1,5 @@
 from datetime import date
-from typing import List, Dict
+from typing import Dict
 
 from src.utils import week_start_date
 import src.orders as orders
