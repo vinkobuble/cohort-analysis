@@ -15,6 +15,7 @@ class TestOrders(TestCase):
         csv_file = io.StringIO(orders_fixtures.ONE_ROW)
         orders_csv_reader = csv.reader(csv_file)
         orders_reader = orders.OrdersReader(orders_csv_reader, timezone)
+        self.assertEqual(parse_timezone("-0500"), orders_reader.timezone)
         for order in orders_reader.orders():
             self.assertEqual(344, order.user_id)
             self.assertEqual(parse_utc_datetime_with_timezone("2014-10-28 00:20:01", parse_timezone(timezone)),

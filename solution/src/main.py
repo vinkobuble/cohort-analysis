@@ -29,7 +29,8 @@ def parse_argv(args: List[str]) -> object:
     parser.add_argument("--orders-file", "-of", required=True, help="Path to orders CSV file")
     parser.add_argument("--output-file", "-o", required=True, help="Path to output CSV file")
     parser.add_argument("--timezone", "-tz", required=True,
-                        help="Timezone for date fields in input and output CSV files. Format [+|-]HHMM. Example: -0500")
+                        help="Timezone for date fields in input and output CSV files. "
+                             "Format '[+|-]HHMM'. Example: '-0500'")
     parser.add_argument("--max-weeks", "-mw", type=int, help="Maximum number of weeks of orders to process")
 
     args: Dict[str, str] = parser.parse_args(args)

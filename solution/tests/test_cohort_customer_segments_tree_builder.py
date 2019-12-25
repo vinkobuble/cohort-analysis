@@ -5,9 +5,9 @@ import csv
 import io
 
 import src.cohort_customer_segment_tree as cohort_customer_segment_tree
-from src.utils import parse_timezone
+from src import customers
 
-import tests.fixtures.customers as customers
+import tests.fixtures.customers as fixtures_customers
 from tests import utils
 
 
@@ -28,14 +28,12 @@ class TestCohortCustomerIndexBuilder(TestCase):
                              datetime.strptime("2019-12-28", "%Y-%m-%d")))
 
     def test_constructor(self) -> None:
-        csv_file = io.StringIO(customers.ONE_ROW)
+        csv_file = io.StringIO(fixtures_customers.ONE_ROW)
         customers_csv_reader = csv.reader(csv_file)
         tree_builder = cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilder(
-            customers_csv_reader, "-0500")
-        self.assertEqual(customers_csv_reader, tree_builder.customers_csv_reader)
-        self.assertEqual(parse_timezone("-0500"), tree_builder.timezone)
+            customers.CustomersReader(customers_csv_reader, "-0500"))
+        self.assertIsInstance(tree_builder.customers_reader, customers.CustomersReader)
         self.assertEqual(tree_builder.cohorts, {})
-        self.assertEqual(["id", "created"], tree_builder.header_row)
 
     def test_build_cohort_index_the_first_row(self) -> None:
         with mock.patch.object(
@@ -44,12 +42,13 @@ class TestCohortCustomerIndexBuilder(TestCase):
                 mock.MagicMock(
                     return_value=None)
         ) as add_customer_mock:
-            tree_builder = utils.cohort_index_builder(customers.ONE_ROW)
+            tree_builder = utils.cohort_index_builder(fixtures_customers.ONE_ROW)
             tree_builder.build()
 
         add_customer_mock.assert_called_once()
-        self.assertEqual((35410, datetime.strptime("2015-07-03 17:01:11-0500", "%Y-%m-%d %H:%M:%S%z")),
-                         add_customer_mock.call_args[0])
+        self.assertEqual(35410, add_customer_mock.call_args[0][0].customer_id)
+        self.assertEqual(datetime.strptime("2015-07-03 17:01:11-0500", "%Y-%m-%d %H:%M:%S%z"),
+                         add_customer_mock.call_args[0][0].created)
 
     def test_build_cohort_index_five_rows(self) -> None:
         with mock.patch.object(
@@ -58,34 +57,36 @@ class TestCohortCustomerIndexBuilder(TestCase):
                 mock.MagicMock(
                     return_value=None)
         ) as add_customer_mock:
-            tree_builder = utils.cohort_index_builder(customers.FIVE_ROWS)
+            tree_builder = utils.cohort_index_builder(fixtures_customers.FIVE_ROWS)
             tree_builder.build()
 
         self.assertEqual(5, add_customer_mock.call_count)
-        self.assertEqual((35414, datetime.strptime("2015-07-03 17:21:55-0500", "%Y-%m-%d %H:%M:%S%z")),
-                         add_customer_mock.call_args[0])
+        self.assertEqual(35414, add_customer_mock.call_args[0][0].customer_id)
+        self.assertEqual(datetime.strptime("2015-07-03 17:21:55-0500", "%Y-%m-%d %H:%M:%S%z"),
+                         add_customer_mock.call_args[0][0].created)
 
     def test_add_customer(self):
-        tree_builder = cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilder(io.StringIO("x"), "-0500")
+        tree_builder = cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilder(
+            customers.CustomersReader(io.StringIO("x"), "-0500"))
 
-        tree_builder.add_customer(10, self.cohort_date)
+        tree_builder.add_customer(customers.Customer(10, self.cohort_date))
         self.assertIn(self.cohort_id, tree_builder.cohorts)
         self.assertEqual(cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilderNode(10),
                          tree_builder.cohorts[self.cohort_id].root_node)
 
-        tree_builder.add_customer(11, self.cohort_date)
+        tree_builder.add_customer(customers.Customer(11, self.cohort_date))
         self.assertIn(self.cohort_id, tree_builder.cohorts)
         self.assertEqual((10, 11),
                          tree_builder.cohorts[
                              self.cohort_id].root_node.subtree_range)
 
-        tree_builder.add_customer(9, self.cohort_date)
+        tree_builder.add_customer(customers.Customer(9, self.cohort_date))
         self.assertIn(self.cohort_id, tree_builder.cohorts)
         self.assertEqual((9, 11),
                          tree_builder.cohorts[
                              self.cohort_id].root_node.subtree_range)
 
-        tree_builder.add_customer(13, self.cohort_date)
+        tree_builder.add_customer(customers.Customer(13, self.cohort_date))
         self.assertIn(self.cohort_id, tree_builder.cohorts)
         self.assertEqual((9, 13),
                          tree_builder.cohorts[
@@ -93,7 +94,7 @@ class TestCohortCustomerIndexBuilder(TestCase):
         self.assertEqual(1,
                          len(tree_builder.cohorts[self.cohort_id].root_node.subtree))
 
-        tree_builder.add_customer(7, self.cohort_date)
+        tree_builder.add_customer(customers.Customer(7, self.cohort_date))
         self.assertIn(self.cohort_id, tree_builder.cohorts)
         self.assertEqual(cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilderNode(7),
                          tree_builder.cohorts[self.cohort_id].root_node)
@@ -101,7 +102,7 @@ class TestCohortCustomerIndexBuilder(TestCase):
                          len(tree_builder.cohorts[self.cohort_id].root_node.subtree))
 
     def test_build_cohort_index_five_rows_one_cohort(self) -> None:
-        tree_builder = utils.cohort_index_builder(customers.FIVE_ROWS_ONE_COHORT)
+        tree_builder = utils.cohort_index_builder(fixtures_customers.FIVE_ROWS_ONE_COHORT)
         tree_builder.build()
 
         self.assertEqual(1, len(tree_builder.cohorts))
@@ -112,7 +113,7 @@ class TestCohortCustomerIndexBuilder(TestCase):
                          customer_id_range_nodes.root_node.subtree_range)
 
     def test_build_cohort_index_five_rows_two_cohorts(self):
-        tree_builder = utils.cohort_index_builder(customers.FIVE_ROWS_TWO_COHORTS)
+        tree_builder = utils.cohort_index_builder(fixtures_customers.FIVE_ROWS_TWO_COHORTS)
         tree_builder.build()
 
         self.assertEqual(2, len(tree_builder.cohorts))
@@ -124,7 +125,7 @@ class TestCohortCustomerIndexBuilder(TestCase):
                                   201532].root_node.subtree_range)
 
     def test_build_cohort_index_five_rows_two_timezone_cohorts(self):
-        tree_builder = utils.cohort_index_builder(customers.FIVE_ROWS_TWO_TIMEZONE_COHORTS)
+        tree_builder = utils.cohort_index_builder(fixtures_customers.FIVE_ROWS_TWO_TIMEZONE_COHORTS)
         tree_builder.build()
 
         self.assertEqual(2, len(tree_builder.cohorts))
@@ -136,7 +137,7 @@ class TestCohortCustomerIndexBuilder(TestCase):
                                   201528].root_node.subtree_range)
 
     def test_build_cohort_index_five_rows_two_overlapping_cohorts(self):
-        tree_builder = utils.cohort_index_builder(customers.FIVE_ROWS_TWO_OVERLAPPING_COHORTS)
+        tree_builder = utils.cohort_index_builder(fixtures_customers.FIVE_ROWS_TWO_OVERLAPPING_COHORTS)
         tree_builder.build()
 
         self.assertEqual(2, len(tree_builder.cohorts))
@@ -157,7 +158,7 @@ class TestCohortCustomerIndexBuilder(TestCase):
                               [0].subtree_range)
 
     def test_build_cohort_index_five_rows_one_merged_cohort(self):
-        tree_builder = utils.cohort_index_builder(customers.FIVE_ROWS_ONE_COHORT_MULTI_SEGMENTS)
+        tree_builder = utils.cohort_index_builder(fixtures_customers.FIVE_ROWS_ONE_COHORT_MULTI_SEGMENTS)
         tree_builder.build()
 
         self.assertEqual(1, len(tree_builder.cohorts))
@@ -176,7 +177,7 @@ class TestCohortCustomerIndexBuilder(TestCase):
                 cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilder, "flatten",
                 mock.MagicMock(return_value=None)) as flatten_mock:
             tree_builder = cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilder(
-                csv.reader(customers_csv_file), timezone)
+                customers.CustomersReader(csv.reader(customers_csv_file), timezone))
             tree_builder.build()
 
         flatten_mock.assert_called_once()
@@ -222,7 +223,7 @@ class TestCohortCustomerIndexBuilder(TestCase):
         timezone = "-0500"
         with open(customers_file_path) as customers_csv_file:
             tree_builder = cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilder(
-                csv.reader(customers_csv_file), timezone)
+                customers.CustomersReader(csv.reader(customers_csv_file), timezone))
             tree_builder.build()
 
         self.validate_flatten_tree(tree_builder.cohorts)
@@ -245,4 +246,3 @@ class TestCohortCustomerIndexBuilder(TestCase):
                                 segments[i + 1][0])
         except AssertionError as err:
             raise err
-

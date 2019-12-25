@@ -4,6 +4,7 @@ import io
 import os
 
 from src import cohort_customer_segment_tree
+from src import customers
 
 
 @contextlib.contextmanager
@@ -19,4 +20,4 @@ def cohort_index_builder(customers_csv_string,
     csv_file = io.StringIO(customers_csv_string)
     customers_csv_reader = csv.reader(csv_file)
     return cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilder(
-        customers_csv_reader, timezone)
+        customers.CustomersReader(customers_csv_reader, timezone))

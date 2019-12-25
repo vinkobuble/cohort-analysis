@@ -21,7 +21,7 @@ class ReportGenerator:
 
         self.csv_writer = csv_writer
 
-        # Prepare the output file writing the header out.
+        # Prepare the output file by writing the header out.
         self._write_header()
 
     def _write_header(self) -> None:

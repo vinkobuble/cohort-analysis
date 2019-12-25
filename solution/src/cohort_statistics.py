@@ -164,7 +164,7 @@ class CohortStatisticsAggregator:
                  customer_to_cohort_index: customer_cohort_index.CustomerSegmentsCohortIndex,
                  config_max_weeks_range: int):
         """
-        :param orders_reader: Orders file csv reader, row-by-row.
+        :param orders_reader: Orders file csv reader and parser, row-by-row.
         :param customer_to_cohort_index: Maps customer ID to its cohort ID.
         :param config_max_weeks_range: Maximum number of cohort weeks to process orders. Set as an configuration
          param by user, used to limit the scope, time, and space needed to generate the report.

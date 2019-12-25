@@ -1,11 +1,11 @@
 from __future__ import annotations
-import collections.abc as collections
 import sys
 from datetime import datetime, date
 from typing import Dict, Tuple, List, Callable
 from bisect import bisect
 
-from src.utils import ComparisonMixin, parse_timezone, parse_utc_datetime_with_timezone, week_start_date
+from src import customers
+from src.utils import ComparisonMixin, week_start_date
 
 
 class CohortCustomerSegmentsTreeBuilderNode(ComparisonMixin):
@@ -507,17 +507,12 @@ class CohortCustomerSegmentsTreeBuilder:
     Builder also knows how to prepare segments list for the fastest lookup operations.
     """
 
-    def __init__(self, customers_csv_reader: collections.Iterator, customers_timezone: str) -> None:
+    def __init__(self, customers_reader: customers.CustomersReader) -> None:
         """
-        :param customers_csv_reader: input stream that parses CSV rows.
-        :param customers_timezone: timezone for datetime conversion.
+        :param customers_reader: Customers file csv reader and parser, row-by-row..
         """
 
-        self.customers_csv_reader = customers_csv_reader
-        self.timezone = parse_timezone(customers_timezone)
-
-        # Pre-read the header so that rest of code does not need to take care of it.
-        self.header_row = next(customers_csv_reader)
+        self.customers_reader = customers_reader
 
         # dict keys are Cohort IDs
         # dict values are lists of sequential Customer ID ranges -
@@ -531,9 +526,8 @@ class CohortCustomerSegmentsTreeBuilder:
         Complexity is `O(logN)`. For each row, cohort tree takes `O(logN)` to insert a new customer id.
         """
 
-        for row in self.customers_csv_reader:
-            # TODO: customer object and parser factory
-            self.add_customer(int(row[0]), parse_utc_datetime_with_timezone(date_str=row[1], timezone=self.timezone))
+        for customer in self.customers_reader.customers():
+            self.add_customer(customer)
 
         self.flatten()
 
@@ -547,7 +541,7 @@ class CohortCustomerSegmentsTreeBuilder:
         for tree in self.cohorts.values():
             tree.flatten()
 
-    def add_customer(self, customer_id: int, customer_creation_date: datetime) -> None:
+    def add_customer(self, customer: customers.Customer) -> None:
         """
         Builds cohort-customer index, one customer at a time by adding customer_id under its cohort_id structure.
 
@@ -558,11 +552,10 @@ class CohortCustomerSegmentsTreeBuilder:
         2. Adds cohort tree when not found for cohort ID.
         3. Invokes `add_customer` for the underlying cohort tree.
 
-        :param customer_id: customer ID being added.
-        :param customer_creation_date: the date when customer was added to the system. Used to calculate cohort ID.
+        :param customer: customer being added.
         """
 
-        week_start = week_start_date(customer_creation_date.date())
+        week_start = week_start_date(customer.created.date())
         customer_cohort_id = CohortCustomerSegmentsTreeBuilder.cohort_id_from_customer_create_date(
             customer_create_date=week_start)
         cohort_customer_id_segment_node = self.cohorts.get(
@@ -570,12 +563,12 @@ class CohortCustomerSegmentsTreeBuilder:
         if cohort_customer_id_segment_node is None:
             self.cohorts[customer_cohort_id] = \
                 CohortCustomerSegmentsTreeBuilderRootNodeWithCohortInfo(
-                    customer_id=customer_id,
+                    customer_id=customer.customer_id,
                     cohort_id=customer_cohort_id,
                     cohort_week_start=week_start
                 )
         else:
-            cohort_customer_id_segment_node.add_customer(customer_id=customer_id)
+            cohort_customer_id_segment_node.add_customer(customer_id=customer.customer_id)
 
     @staticmethod
     def cohort_id_from_customer_create_date(customer_create_date: date) -> int:
