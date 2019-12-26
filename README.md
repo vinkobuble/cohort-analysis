@@ -2,7 +2,7 @@
 
 __by Vinko Buble, Dec, 2019__
 
-This assignment is a part of candidate is Vinko Buble interview process for Senior Software Engineer position for Invitae, Inc.
+This assignment is a part of candidate Vinko Buble interview process for Invitae, Inc. Senior Software Engineer position.
 The original assignment can be found [here](https://github.com/invitae/cohort-analysis-assignment).
 
 ## Cohort Analysis Script
@@ -32,7 +32,7 @@ If you cloned the repo in `Downloads` folder and extracted it there then execute
 ```
 docker run --rm -v ~/Downloads/vinko-buble-invitae-cohort-analysis/data:/data -ti cohort-analysis python . --customers-file /data/customers.csv --orders-file /data/orders.csv --timezone -0800 --output-file /data/output.csv
 ```
-Or change the path `~/Downloads/vinko-buble-invitae-cohort-analysis` to be the absolute repo path.
+Or change the path `~/Downloads/vinko-buble-invitae-cohort-analysis` to the absolute repo path (keep the `/data` part if you are reusing the `/data` folder). 
  
 There are already sample files in [data](./data) folder inside the project folder.
 
@@ -41,6 +41,7 @@ The script will generate `output.csv` file inside the [data](./data) folder.
 
 #### Run tests
 
+Do not forget to change the `/data` folder path. It has to be absolute. 
 ```
 docker run --rm -v ~/Downloads/vinko-buble-invitae-cohort-analysis/data:/data -ti cohort-analysis python -m unittest
 ```
@@ -57,7 +58,7 @@ The only requirement for script is Python 3.7.x. No other dependecy has been add
 
 To get list of all cli arguments run (change `path/to/solution/directory` with the true path to the `solution` folder). That is `./solution` relative to this folder.
 
-`python3 path/to/solution/directory --help` or `python3 path/to/solution/directory -h`.
+`python3 path/to/solution/directory --help` 
 
 Run the script with input files within the [data](./data) folder.
 
@@ -99,6 +100,12 @@ Graphical presentation of continuous monotonic and almost continuous monotonic c
 - `K` as number of cohorts,
 - `S` as maximum number of segments per cohort.
 
+For better understanding of the relations between numbers:
+
+`M >> N >> K ~ S`
+
+`M`(orders) could be split by weeks, while we should be careful with splitting `N` (customers).
+
 In the case of monotonic continuous function, each cohort would have only one segment, and the algorithm of building it would consist only of calculating `[min, max]` customer ID values for each cohort: time complexity `O(N)`, space complexity `O(K)`. Then an index for mapping Customer ID to Cohort ID is just a binary search through the list of customer ID segments.
 
 Since we have an almost monotonic continuous function (very few customer IDs are out of the order), our structure will have more than one segment of customer IDs per cohort, but not as close as if the customer set is random. Therefore we use trees to represent cohort customer ID segments as the structure that would produce the minimal time and space complexity. In its nature it is an `S`-ary tree, which means every node has no more than `S` children.
@@ -128,7 +135,7 @@ This way we achieve customer ID lookup time complexity of `O(logK x logS)`.
 
 ### Aggregating statistics from orders file
 
-Now the script reads the orders file, and finds minimum and maximum weeks for the cohort, and collects customers for each week in sets. 
+Next, the script reads the orders file, and finds minimum and maximum weeks for the cohort, and collects customers for each week in sets. 
 This is the trickiest part, since no space complexity optimization better than `O(M)` could be found.
 
 The reason for collection all users per week and keeping them in the memory is coming from the requirement to find first-time orderers. 
@@ -145,4 +152,9 @@ The simplest of all steps. Take aggregated statistics and cohorts infos, and wri
 The time complexity is `O(C x W)` where C is the number of cohorts, and W is the number of weeks.
 The space complexity is `O(1)`, if we take into consideration that all needed memory is allocated in the previous step and not counting the output file as a memory consumer.
 
+## Additional improvements
+
+Additional improvements to the script that could be done:
+1. Progress reporting. Currently script reports only when it completes a particular step, but nothing in between. There would be an progress report object which would receive progress event, and this object would print the response out or store in the file.
+2. Continuing from the point where script was interrupted. It is of utmost importance for a long running scripts to be able to continue when they are interrupted. That means that script should be able to persist intermediate states and read them when it loads.
 
