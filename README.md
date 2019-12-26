@@ -3,6 +3,7 @@
 __by Vinko Buble, Dec, 2019__
 
 This assignment is a part of candidate is Vinko Buble interview process for Senior Software Engineer position for Invitae, Inc.
+The original assignment can be found [here](https://github.com/invitae/cohort-analysis-assignment).
 
 ## Cohort Analysis Script
 
@@ -54,17 +55,17 @@ The only requirement for script is Python 3.7.x. No other dependecy has been add
 
 #### Execute
 
-To get list of all cli arguments run (change `path/to/solution/directory` with the true path to the `solution` folder)
+To get list of all cli arguments run (change `path/to/solution/directory` with the true path to the `solution` folder). That is `./solution` relative to this folder.
 
 `python3 path/to/solution/directory --help` or `python3 path/to/solution/directory -h`.
 
 Run the script with input files within the [data](./data) folder.
 
-`python3 path/to/solution/directory --customers-file ../data/customers.csv --orders-file ../data/orders.csv --timezone -0800 --output-file ../data/output.csv`
+`python3 path/to/solution/directory --customers-file ./data/customers.csv --orders-file ./data/orders.csv --timezone -0800 --output-file ./data/output.csv`
 
 #### Running tests
 
-From the `solution` folder run:
+Change the current folder to the `solution` folder (`cd solution`) and run:
 
 ```python3 -m unittest```
 
@@ -72,7 +73,7 @@ From the `solution` folder run:
 ## Solution
 
 The calculation of the report is performed in four stages: 
-1. Generate cohort customer ID tree out of customers CSV file [cohort_customer_segment_tree.py](./solution/src/cohort_customer_segment_tree.py)
+1. Generate cohort customer ID segments tree out of customers CSV file [cohort_customer_segment_tree.py](./solution/src/cohort_customer_segment_tree.py)
 2. Prepare customer ID -> cohort ID lookup - resolve cohort ID by customer ID. [customer_cohort_index.py](./src/solution/customer_cohort_index.py)
 3. Reading orders CSV file, and aggregating the statistics. [cohort_statistics.py](./src/solution/cohort_statistics.py)
 4. Generating report - output to CSV file. [report_generator.py](./src/solution/report_generator.py)
@@ -82,8 +83,15 @@ The calculation of the report is performed in four stages:
 The core idea behind implementation of the tree is preserving the memory footprint while improving the time complexity of the algorithm.
 
 This cohort/customer mapping algorithm assumes that function
+```
 f(Customers ID) = Customer Creation Date/Time
+```
 is almost monotonic and continuous.
+
+Graphical presentation of continuous monotonic and almost continuous monotonic cohort functions.
+
+![Continuous Monotonic Cohort functions](./assets/continuous-monotonic-cohorts-functions.png "Continuous Monotonic Cohort functions")
+
 
 **Note**: Following notations are used in the rest of the document: 
 - `N` as number of customers, 
@@ -93,8 +101,7 @@ is almost monotonic and continuous.
 
 In the case of monotonic continuous function, each cohort would have only one segment, and the algorithm of building it would consist only of calculating `[min, max]` customer ID values for each cohort: time complexity `O(N)`, space complexity `O(K)`. Then an index for mapping Customer ID to Cohort ID is just a binary search through the list of customer ID segments.
 
-Since we have an almost monotonic continuous function (very few customer IDs are out of the order),
-our structure will have more than one segment of customer IDs per cohort, but not as close as if the customer set is random. Therefore we use trees to represent cohort customer ID segments as the structure that would produce the minimal time and space complexity. In its nature it is an `S`-ary tree, which means every node has no more than `S` children.
+Since we have an almost monotonic continuous function (very few customer IDs are out of the order), our structure will have more than one segment of customer IDs per cohort, but not as close as if the customer set is random. Therefore we use trees to represent cohort customer ID segments as the structure that would produce the minimal time and space complexity. In its nature it is an `S`-ary tree, which means every node has no more than `S` children.
 
 Time Complexity of this step is `O(NlogS)`.
 Space complexity is `O(K*S)`.
