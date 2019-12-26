@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Dict
 
-from src.utils import week_start_date
+from src.utils import week_start_date, calculate_week_id
 import src.orders as orders
 import src.customer_cohort_index as customer_cohort_index
 
@@ -75,6 +75,9 @@ class CohortStatistics:
         :param week_id: The week this order belongs to.
         :return:
         """
+
+        if week_id - cohort_id > 30:
+            i = 0
 
         # Expand the actual total max weeks range if needed.
         if week_id - cohort_id > self.max_weeks_range:
@@ -175,18 +178,6 @@ class CohortStatisticsAggregator:
         self.customer_to_cohort_index = customer_to_cohort_index
         self.config_max_weeks_range = config_max_weeks_range
 
-    @staticmethod
-    def calculate_order_week_id(order_create_date: date) -> int:
-        """
-        Same formula as for `cohort_id`. It would make send to create a type: `CohortWeekId`.
-
-        :param order_create_date: Date of the order.
-        :return: Calculated `week_id`. For human readability it is equal to `year * 100 + week_of_the_year`.
-        """
-        week_start = week_start_date(order_create_date)
-        return week_start.year * 100 + \
-            week_start.isocalendar()[1]
-
     def aggregate(self) -> CohortStatistics:
         """
         Creates a new `CohortStatistics` object, and aggregates statistics with orders file.
@@ -208,7 +199,7 @@ class CohortStatisticsAggregator:
                 continue
 
             # Calculate week ID.
-            week_id = CohortStatisticsAggregator.calculate_order_week_id(order.created.date())
+            week_id = calculate_week_id(order.created.date())
 
             if week_id < cohort_id:
                 continue

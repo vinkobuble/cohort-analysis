@@ -30,7 +30,7 @@ def parse_timezone(timezone: str) -> tzinfo:
     """
 
     # HACK(vinko): Parse any date to get timezone offset from string
-    return datetime.strptime("1971-01-01" + timezone, "%Y-%m-%d%z").tzinfo
+    return datetime.strptime("1971-02-02" + timezone, "%Y-%m-%d%z").tzinfo
 
 
 def parse_utc_datetime_with_timezone(date_str: str, timezone: tzinfo) -> datetime:
@@ -49,11 +49,27 @@ def parse_utc_datetime_with_timezone(date_str: str, timezone: tzinfo) -> datetim
 
 def week_start_date(for_date: date) -> date:
     """
-    Calculate the sunday before or on the input date.
+    Calculate the Sunday before or on the input date.
 
-    :param for_date: Date to calculate the sunday for.
+    :param for_date: Date to calculate the Sunday.
     :return: If `for_date` is on Sunday, return the same `date`, otherwise object representing
         the Sunday before the date.
     """
 
-    return for_date - timedelta(days=for_date.weekday())
+    return for_date - timedelta(days=(for_date.weekday() + 1) % 7)
+
+
+oldest_week_start = date(1971, 1, 3)
+
+
+def calculate_week_id(for_date: date) -> int:
+    """
+    Calculate the unique ID as integer for the week the date belongs to.
+
+    Note: the oldest day this method works for is Jan, 3rd, 1971
+
+    :param for_date: Date to calculate the ID.
+    :return: Number of weeks since Sunday, Jan, 3rd 1971.
+    """
+
+    return (week_start_date(for_date) - oldest_week_start).days // 7

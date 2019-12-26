@@ -5,7 +5,7 @@ from typing import Dict, Tuple, List, Callable
 from bisect import bisect
 
 from src import customers
-from src.utils import ComparisonMixin, week_start_date
+from src.utils import ComparisonMixin, week_start_date, calculate_week_id
 
 
 class CohortCustomerSegmentsTreeBuilderNode(ComparisonMixin):
@@ -556,8 +556,7 @@ class CohortCustomerSegmentsTreeBuilder:
         """
 
         week_start = week_start_date(customer.created.date())
-        customer_cohort_id = CohortCustomerSegmentsTreeBuilder.cohort_id_from_customer_create_date(
-            customer_create_date=week_start)
+        customer_cohort_id = calculate_week_id(customer.created.date())
         cohort_customer_id_segment_node = self.cohorts.get(
             customer_cohort_id, None)
         if cohort_customer_id_segment_node is None:
@@ -569,21 +568,3 @@ class CohortCustomerSegmentsTreeBuilder:
                 )
         else:
             cohort_customer_id_segment_node.add_customer(customer_id=customer.customer_id)
-
-    @staticmethod
-    def cohort_id_from_customer_create_date(customer_create_date: date) -> int:
-        """
-        Calculate cohort ID for given customer join date.
-
-        Take year and week of the year from date and multiply year with any number > 52 as more significant value
-        to get a unique number.
-
-        We picked 100 as multiplicand for easier human decoding ;) For example,
-            week 1 of 2014 maps to cohort ID 201401
-            week 51 of 2014 maps to cohort ID 201451
-
-        :param customer_create_date: The date customer joined.
-        :return: calculated cohort ID
-        """
-
-        return customer_create_date.year * 100 + customer_create_date.isocalendar()[1]

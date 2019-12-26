@@ -2,12 +2,13 @@ import csv
 from unittest import TestCase, mock
 
 import src.main as main
+import src.utils as utils
 
 
 class TestE2E1(TestCase):
 
     def test_e2e(self):
-        timezone = "-0500"
+        timezone = utils.parse_timezone("-0500")
         file_writer_mock = mock.Mock()
 
         customers_file_path = "fixtures/customers_1.csv"

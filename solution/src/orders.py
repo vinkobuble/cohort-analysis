@@ -1,7 +1,7 @@
 import collections.abc as collections
-from datetime import datetime
+from datetime import datetime, tzinfo
 
-from src.utils import parse_timezone, parse_utc_datetime_with_timezone
+from src.utils import parse_utc_datetime_with_timezone
 
 
 class Order:
@@ -24,9 +24,9 @@ class OrdersReader:
     Wrapper around the csv reader to read and parse orders row by row.
     """
 
-    def __init__(self, orders_csv_reader: collections.Iterator, orders_timezone: str) -> None:
+    def __init__(self, orders_csv_reader: collections.Iterator, orders_timezone: tzinfo) -> None:
         self.orders_csv_reader = orders_csv_reader
-        self.timezone = parse_timezone(orders_timezone)
+        self.timezone = orders_timezone
         self.header_row = next(orders_csv_reader)
 
     def orders(self) -> Order:

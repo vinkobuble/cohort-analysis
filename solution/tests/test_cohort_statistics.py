@@ -2,19 +2,19 @@ import csv
 import io
 from unittest import TestCase
 
-import tests.utils as utils
+import tests.utils
 import tests.fixtures.orders as orders_fixtures
 import tests.fixtures.customers as customers_fixtures
 
 import src.orders as orders
-from src import customer_cohort_index, cohort_statistics
+from src import customer_cohort_index, cohort_statistics, utils
 
 
 class TestCohortStatistics(TestCase):
 
     def test_three_orders_one_cohort_one_week(self):
-        timezone = "-0500"
-        cohort_index_builder = utils.cohort_index_builder(customers_fixtures.FIVE_ROWS_ONE_COHORT, timezone)
+        timezone = utils.parse_timezone("-0500")
+        cohort_index_builder = tests.utils.cohort_index_builder(customers_fixtures.FIVE_ROWS_ONE_COHORT, timezone)
         cohort_index_builder.build()
 
         customer_index_builder = customer_cohort_index.CustomerIndexBuilder(cohort_index_builder.cohorts)
@@ -40,8 +40,8 @@ class TestCohortStatistics(TestCase):
         self.assertEqual(3, len(user_id_set))
 
     def test_five_orders_two_cohorts_two_weeks(self):
-        timezone = "-0500"
-        cohort_index_builder = utils.cohort_index_builder(customers_fixtures.FIVE_ROWS_TWO_COHORTS, timezone)
+        timezone = utils.parse_timezone("-0500")
+        cohort_index_builder = tests.utils.cohort_index_builder(customers_fixtures.FIVE_ROWS_TWO_COHORTS, timezone)
         cohort_index_builder.build()
 
         customer_index_builder = customer_cohort_index.CustomerIndexBuilder(cohort_index_builder.cohorts)
@@ -69,8 +69,8 @@ class TestCohortStatistics(TestCase):
         self.assertEqual(1, unique_customers_count_2)
 
     def test_five_orders_one_cohort_two_weeks(self):
-        timezone = "-0500"
-        cohort_index_builder = utils.cohort_index_builder(customers_fixtures.FIVE_ROWS_ONE_COHORT, timezone)
+        timezone = utils.parse_timezone("-0500")
+        cohort_index_builder = tests.utils.cohort_index_builder(customers_fixtures.FIVE_ROWS_ONE_COHORT, timezone)
         cohort_index_builder.build()
 
         customer_index_builder = customer_cohort_index.CustomerIndexBuilder(cohort_index_builder.cohorts)
@@ -98,8 +98,8 @@ class TestCohortStatistics(TestCase):
         self.assertEqual(3, unique_customers_count_2)
 
     def test_five_orders_one_cohort_two_weeks_order_overlap(self):
-        timezone = "-0500"
-        cohort_index_builder = utils.cohort_index_builder(customers_fixtures.FIVE_ROWS_ONE_COHORT, timezone)
+        timezone = utils.parse_timezone("-0500")
+        cohort_index_builder = tests.utils.cohort_index_builder(customers_fixtures.FIVE_ROWS_ONE_COHORT, timezone)
         cohort_index_builder.build()
 
         customer_index_builder = customer_cohort_index.CustomerIndexBuilder(cohort_index_builder.cohorts)

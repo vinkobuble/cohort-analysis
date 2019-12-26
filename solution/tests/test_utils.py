@@ -1,9 +1,29 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, date
 from unittest import TestCase, mock
 
 from src import utils
+
+
+class TestUtils(TestCase):
+
+    def test_timezone(self):
+        self.assertEqual("UTC-05:00", utils.parse_timezone("-0500").tzname(None))
+
+    def test_parse_utc_datetime_with_timezone(self):
+        tz = utils.parse_timezone("-0500")
+        self.assertEqual(datetime(2015, 7, 3, hour=17, minute=1, second=11, tzinfo=tz),
+                         utils.parse_utc_datetime_with_timezone("2015-07-03 22:01:11", tz))
+
+    def test_week_start_date(self):
+        tz = utils.parse_timezone("-0500")
+
+        for_date = utils.parse_utc_datetime_with_timezone("2015-07-03 22:01:11", tz).date()
+        self.assertEqual(date(2015, 6, 28), utils.week_start_date(for_date))
+
+        for_date = utils.parse_utc_datetime_with_timezone("2015-07-05 22:01:11", tz).date()
+        self.assertEqual(date(2015, 7, 5), utils.week_start_date(for_date))
 
 
 class ComparisonImplementation(utils.ComparisonMixin):
@@ -18,11 +38,7 @@ class ComparisonImplementation(utils.ComparisonMixin):
         return self.test_id == other.test_id
 
 
-class TestUtils(TestCase):
-
-    def test_timezone(self):
-        self.assertEqual("UTC-05:00", utils.parse_timezone("-0500").tzname(None))
-
+class TestComparisonMixins(TestCase):
     def test_parse_datetime_with_timezone(self):
         datetime_str = "2019-12-08 21:08:14"
         tz = utils.parse_timezone("-0500")

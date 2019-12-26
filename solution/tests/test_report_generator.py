@@ -2,19 +2,20 @@ import csv
 import io
 from unittest import TestCase, mock
 
-import tests.utils as utils
+import tests.utils
 import tests.fixtures.orders as orders_fixtures
 import tests.fixtures.customers as customers_fixtures
 
 import src.orders as orders
 from src import customer_cohort_index, cohort_statistics, report_generator
+import src.utils as utils
 
 
 class TestReportGenerator(TestCase):
 
     def test_five_orders_two_cohorts_two_weeks_generate_report(self):
-        timezone = "-0500"
-        cohort_index_builder = utils.cohort_index_builder(customers_fixtures.FIVE_ROWS_TWO_COHORTS, timezone)
+        timezone = utils.parse_timezone("-0500")
+        cohort_index_builder = tests.utils.cohort_index_builder(customers_fixtures.FIVE_ROWS_TWO_COHORTS, timezone)
         cohort_index_builder.build()
 
         customer_index_builder = customer_cohort_index.CustomerIndexBuilder(cohort_index_builder.cohorts)

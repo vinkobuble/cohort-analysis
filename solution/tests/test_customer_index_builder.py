@@ -40,6 +40,6 @@ class TestCustomerIndexBuilder(TestCase):
 
         index = builder.build()
 
-        self.assertEqual(201527, index.try_get_cohort_id_by_customer_id(35411))
-        self.assertEqual(201532, index.try_get_cohort_id_by_customer_id(35414))
+        self.assertEqual(2321, index.try_get_cohort_id_by_customer_id(35411))
+        self.assertEqual(2326, index.try_get_cohort_id_by_customer_id(35414))
 
