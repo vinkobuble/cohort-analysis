@@ -9,10 +9,10 @@ This assignment is a part of candidate is Vinko Buble interview process for Seni
 Cohort Analysis is a Python 3.7 script that processes two input CSV files, one containing customers and the other containing orders data.
 The output of the script is a CSV file with customers cohorts usage analytics per week:
  1. count of unique users in a cohort.
- 1. count and percentage percentage of unique users in a week.
- 1. count and percentage of 1st time users in a week.
+ 2. count and percentage of unique users in a week.
+ 3. count and percentage of 1st time users in a week.
  
- The sample input CSV files can be found in the [data]() folder.
+ The sample input CSV files can be found in the [data](./data) folder.
  
 
 ## How to run script
@@ -33,9 +33,9 @@ docker run --rm -v ~/Downloads/vinko-buble-invitae-cohort-analysis/data:/data -t
 ```
 Or change the path `~/Downloads/vinko-buble-invitae-cohort-analysis` to be the absolute repo path.
  
-There are already sample files in [data]() folder inside the project folder.
+There are already sample files in [data](./data) folder inside the project folder.
 
-The script will generate `output.csv` file inside the [data]() folder.
+The script will generate `output.csv` file inside the [data](./data) folder.
 
 
 #### Run tests
@@ -54,11 +54,11 @@ The only requirement for script is Python 3.7.x. No other dependecy has been add
 
 #### Execute
 
-To get list of all cli arguments run (change `path/to/solution/directory` for the true path to the `solution` folder)
+To get list of all cli arguments run (change `path/to/solution/directory` with the true path to the `solution` folder)
 
 `python3 path/to/solution/directory --help` or `python3 path/to/solution/directory -h`.
 
-Run the script with input files within the [data]() folder.
+Run the script with input files within the [data](./data) folder.
 
 `python3 path/to/solution/directory --customers-file ../data/customers.csv --orders-file ../data/orders.csv --timezone -0800 --output-file ../data/output.csv`
 
@@ -71,40 +71,40 @@ From the `solution` folder run:
 
 ## Solution
 
-The calculation of the report consists of four stages: 
-1. Generate cohort customer ID tree out of customers CSV file [cohort_customer_segment_tree.py](./src/cohort_customer_segment_tree.py)
-2. Prepare customer ID -> cohort ID lookup - resolve cohort ID by customer ID. [customer_cohort_index.py](./src/customer_cohort_index.py)
-3. Reading orders CSV file, and aggregating the statistics. [cohort_statistics.py](./src/cohort_statistics.py)
-4. Generating report - output to CSV file. [report_generator.py](./src/report_generator.py)
+The calculation of the report is performed in four stages: 
+1. Generate cohort customer ID tree out of customers CSV file [cohort_customer_segment_tree.py](./solution/src/cohort_customer_segment_tree.py)
+2. Prepare customer ID -> cohort ID lookup - resolve cohort ID by customer ID. [customer_cohort_index.py](./src/solution/customer_cohort_index.py)
+3. Reading orders CSV file, and aggregating the statistics. [cohort_statistics.py](./src/solution/cohort_statistics.py)
+4. Generating report - output to CSV file. [report_generator.py](./src/solution/report_generator.py)
 
 ### Cohort customer ID tree
 
-The core idea behind implementation of the tree is preserving the memory footprint while improving the time complexity of the alorithm.
+The core idea behind implementation of the tree is preserving the memory footprint while improving the time complexity of the algorithm.
 
-This cohort algorithm assumes that function
+This cohort/customer mapping algorithm assumes that function
 f(Customers ID) = Customer Creation Date/Time
 is almost monotonic and continuous.
 
-**Note**: The test uses following notations: 
-- `N` is number of customers, 
-- `M` is number of orders, 
-- `K` is number of cohorts,
-- `S` is maximum number of segments per cohort.
+**Note**: Following notations are used in the rest of the document: 
+- `N` as number of customers, 
+- `M` as number of orders, 
+- `K` as number of cohorts,
+- `S` as maximum number of segments per cohort.
 
-In the case of monotonic continuous function, segments of Customer IDs would be disjunct, each cohort would have only one segment, and the algorithm of building it would consist only of searching for `[min, max]` customer ID values for each cohort: time complexity `O(N)`, space complexity `O(K)`. Then an index for mapping Customer ID to Cohort ID is just a searchable list of customer ID segments.
+In the case of monotonic continuous function, each cohort would have only one segment, and the algorithm of building it would consist only of calculating `[min, max]` customer ID values for each cohort: time complexity `O(N)`, space complexity `O(K)`. Then an index for mapping Customer ID to Cohort ID is just a binary search through the list of customer ID segments.
 
 Since we have an almost monotonic continuous function (very few customer IDs are out of the order),
-our structure will have more than one segment of customer IDs per cohort, but not as close as if the customer set is random. Therefore we use trees to represent cohort customer ID segments as the structure that would produce the minimal time and space complexity.
+our structure will have more than one segment of customer IDs per cohort, but not as close as if the customer set is random. Therefore we use trees to represent cohort customer ID segments as the structure that would produce the minimal time and space complexity. In its nature it is an `S`-ary tree, which means every node has no more than `S` children.
 
 Time Complexity of this step is `O(NlogS)`.
 Space complexity is `O(K*S)`.
 
 Otherwise, if list was used, the complexity of `insert` and `del` list operations would produce an algorithm with the `O(N^2/K)` complexity.
 
-As the last step we flatten the structure to get sorted list of customer ID segments for fast lookup by customer ID. 
+As the last step we flatten the structure to get a sorted list of customer ID segments for fast lookup by customer ID. 
 Time complexity of this step is `O(K*S)`, since it is only traversing through the trees and collecting segments. You can imagine this step as 'balancing the trees'.
 
-The visual presentation of the tree structure:
+The visual presentation of the single cohort tree structure:
 
 ![Cohort CustomerID segments tree](./assets/cohort-customer-segments-tree.png "Cohort CustomerID segments tree")
 
@@ -136,6 +136,6 @@ The time complexity of this step is `O(M x logS x logC)` - for each order we nee
 
 The simplest of all steps. Take aggregated statistics and cohorts infos, and write the data out in CSV file. 
 The time complexity is `O(C x W)` where C is the number of cohorts, and W is the number of weeks.
-The space complexity is `O(1)`, if we take into consideration that all needed memory is allocated in the previous step (and not counting the output file as a memory consumer).
+The space complexity is `O(1)`, if we take into consideration that all needed memory is allocated in the previous step and not counting the output file as a memory consumer.
 
 
