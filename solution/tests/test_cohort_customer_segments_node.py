@@ -17,7 +17,8 @@ class TestCustomerIdSegmentNode(unittest.TestCase):
 
         self.assertEqual((1, 1), node_with_customer_id_and_initial_child.segment)
         self.assertEqual((1, 2), node_with_customer_id_and_initial_child.subtree_range)
-        self.assertEqual([cohort_index.CohortCustomerSegmentsTreeBuilderNode(2)], node_with_customer_id_and_initial_child.subtree)
+        self.assertEqual([cohort_index.CohortCustomerSegmentsTreeBuilderNode(2)],
+                         node_with_customer_id_and_initial_child.subtree)
 
     def test_try_expand_segment(self):
         node = cohort_index.CohortCustomerSegmentsTreeBuilderNode(10)
@@ -36,7 +37,6 @@ class TestCustomerIdSegmentNode(unittest.TestCase):
         self.assertFalse(node._try_expand_segment_end(13))
 
     def test_add_customer(self):
-
         node = cohort_index.CohortCustomerSegmentsTreeBuilderNode(10)
 
         self.assertTrue(node.try_expand_segment_start(9))
@@ -56,7 +56,8 @@ class TestCustomerIdSegmentNode(unittest.TestCase):
         node.add_customer(15)
         self.assertEqual((9, 11), node.segment)
         self.assertEqual((9, 15), node.subtree_range)
-        self.assertEqual([cohort_index.CohortCustomerSegmentsTreeBuilderNode(13), cohort_index.CohortCustomerSegmentsTreeBuilderNode(15)], node.subtree)
+        self.assertEqual([cohort_index.CohortCustomerSegmentsTreeBuilderNode(13),
+                          cohort_index.CohortCustomerSegmentsTreeBuilderNode(15)], node.subtree)
         self.assertEqual((13, 13), node.subtree[0].subtree_range)
         self.assertEqual((15, 15), node.subtree[1].subtree_range)
 
@@ -66,5 +67,3 @@ class TestCustomerIdSegmentNode(unittest.TestCase):
         self.assertEqual(1, len(node.subtree))
         self.assertEqual((13, 15), node.subtree[0].segment)
         self.assertEqual((13, 15), node.subtree[0].subtree_range)
-
-

@@ -89,19 +89,15 @@ class TestCohortCustomerIndexBuilder(TestCase):
         self.assertIn(self.cohort_id, tree_builder.cohorts)
         self.assertEqual(cohort_customer_segment_tree.CohortCustomerSegmentsTreeBuilderNode(7),
                          tree_builder.cohorts[self.cohort_id].root_node)
-        self.assertEqual(2,
-                         len(tree_builder.cohorts[self.cohort_id].root_node.subtree))
+        self.assertEqual(2, len(tree_builder.cohorts[self.cohort_id].root_node.subtree))
 
     def test_build_cohort_index_five_rows_one_cohort(self) -> None:
         tree_builder = tests.utils.cohort_index_builder(fixtures_customers.FIVE_ROWS_ONE_COHORT)
         tree_builder.build()
 
         self.assertEqual(1, len(tree_builder.cohorts))
-        customer_id_range_nodes = \
-            list(tree_builder.cohorts.values())[
-                0]
-        self.assertEqual((35410, 35414),
-                         customer_id_range_nodes.root_node.subtree_range)
+        customer_id_range_nodes = list(tree_builder.cohorts.values())[0]
+        self.assertEqual((35410, 35414), customer_id_range_nodes.root_node.subtree_range)
 
     def test_build_cohort_index_five_rows_two_cohorts(self):
         tree_builder = tests.utils.cohort_index_builder(fixtures_customers.FIVE_ROWS_TWO_COHORTS)
@@ -120,45 +116,28 @@ class TestCohortCustomerIndexBuilder(TestCase):
         tree_builder.build()
 
         self.assertEqual(2, len(tree_builder.cohorts))
-        self.assertTupleEqual((35410, 35411),
-                              tree_builder.cohorts[
-                                  2321].root_node.subtree_range)
-        self.assertTupleEqual((35412, 35414),
-                              tree_builder.cohorts[
-                                  2322].root_node.subtree_range)
+        self.assertTupleEqual((35410, 35411), tree_builder.cohorts[2321].root_node.subtree_range)
+        self.assertTupleEqual((35412, 35414), tree_builder.cohorts[2322].root_node.subtree_range)
 
     def test_build_cohort_index_five_rows_two_overlapping_cohorts(self):
         tree_builder = tests.utils.cohort_index_builder(fixtures_customers.FIVE_ROWS_TWO_OVERLAPPING_COHORTS)
         tree_builder.build()
 
         self.assertEqual(2, len(tree_builder.cohorts))
-        self.assertTupleEqual((35410, 35413),
-                              tree_builder.cohorts[2321].root_node
-                              .subtree_range)
+        self.assertTupleEqual((35410, 35413), tree_builder.cohorts[2321].root_node.subtree_range)
         self.assertEqual(1, len(tree_builder.cohorts[2321].root_node.subtree))
-        self.assertTupleEqual((35413, 35413),
-                              tree_builder.cohorts[2321].root_node.subtree
-                              [0].subtree_range)
-        self.assertTupleEqual((35411, 35414),
-                              tree_builder.cohorts[2327].root_node
-                              .subtree_range)
-        self.assertEqual(1, len(tree_builder.cohorts[
-                                    2327].root_node.subtree))
-        self.assertTupleEqual((35414, 35414),
-                              tree_builder.cohorts[2327].root_node.subtree
-                              [0].subtree_range)
+        self.assertTupleEqual((35413, 35413), tree_builder.cohorts[2321].root_node.subtree[0].subtree_range)
+        self.assertTupleEqual((35411, 35414), tree_builder.cohorts[2327].root_node.subtree_range)
+        self.assertEqual(1, len(tree_builder.cohorts[2327].root_node.subtree))
+        self.assertTupleEqual((35414, 35414), tree_builder.cohorts[2327].root_node.subtree[0].subtree_range)
 
     def test_build_cohort_index_five_rows_one_merged_cohort(self):
         tree_builder = tests.utils.cohort_index_builder(fixtures_customers.FIVE_ROWS_ONE_COHORT_MULTI_SEGMENTS)
         tree_builder.build()
 
         self.assertEqual(1, len(tree_builder.cohorts))
-        self.assertTupleEqual((35410, 35414),
-                              tree_builder.cohorts[2321].root_node
-                              .subtree_range)
-        self.assertTupleEqual((35410, 35414),
-                              tree_builder.cohorts[2321].root_node
-                              .subtree_range)
+        self.assertTupleEqual((35410, 35414), tree_builder.cohorts[2321].root_node.subtree_range)
+        self.assertTupleEqual((35410, 35414), tree_builder.cohorts[2321].root_node.subtree_range)
         self.assertEqual(0, len(tree_builder.cohorts[2321].root_node.subtree))
 
     def test_building_full_tree_no_flatten(self):
@@ -180,8 +159,7 @@ class TestCohortCustomerIndexBuilder(TestCase):
         self.assertLessEqual(node.segment[0], node.segment[1])
         self.assertLessEqual(node.subtree_range[0], node.subtree_range[1])
         self.assertEqual(node.subtree_range[0], node.segment[0])
-        self.assertEqual(node.subtree_range[1],
-                         node.segment[1] if len(node.subtree) == 0 else
+        self.assertEqual(node.subtree_range[1], node.segment[1] if len(node.subtree) == 0 else
                          node.subtree[-1].subtree_range[1])
 
         try:
@@ -193,8 +171,7 @@ class TestCohortCustomerIndexBuilder(TestCase):
 
         try:
             for i in range(len(node.subtree) - 1):
-                self.assertLess(node.subtree[i].subtree_range[1] + 1,
-                                node.subtree[i + 1].subtree_range[0])
+                self.assertLess(node.subtree[i].subtree_range[1] + 1, node.subtree[i + 1].subtree_range[0])
         except AssertionError as err:
             raise err
 

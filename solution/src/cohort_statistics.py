@@ -209,7 +209,7 @@ class CohortStatisticsAggregator:
                 continue
 
             # Aggregated this order.
-            statistics.add_order(cohort_id=cohort_id, user_id=order.user_id, week_id=week_id)
+            statistics.add_order(cohort_id, order.user_id, week_id)
 
         # After all done, calculate statistics that need access to all data points.
         statistics.post_processing()

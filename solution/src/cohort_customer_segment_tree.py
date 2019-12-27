@@ -18,16 +18,16 @@ class CohortCustomerSegmentsTreeBuilderNode(ComparisonMixin):
     is almost monotonic and continuous.
 
     In the case of monotonic continuous function, segments of Customer IDs would be disjunct,
-    and each cohort would have only one segment, abd the algorithm of building it would consist only of
+    and each cohort would have only one segment, and the algorithm of building it would consist only of
     searching for `[min, max]` customer ID values for each cohort.
-    Then an index for mapping Customer ID to Cohort ID is just a searchable list of ID segments.
+    Then an index for mapping Customer ID to Cohort ID is just a searchable list of customer ID segments.
 
     Since we have an almost monotonic continuous function (very few customer IDs are out of the order),
     our structure will have more than one segment of customer IDs per cohort, and to build it with the least
     complexity, we use trees to represent cohort customer ID segments.
 
     Otherwise, if list was used, the complexity of `insert` and `del` list operations
-    would make create an algorithm with the `O(N^2)` complexity.
+    would produce an algorithm with the `O(N^2)` complexity.
     """
 
     def __init__(self, customer_id: int, child_node: CohortCustomerSegmentsTreeBuilderNode = None) -> None:
@@ -36,7 +36,7 @@ class CohortCustomerSegmentsTreeBuilderNode(ComparisonMixin):
         :param child_node: The node this node is replacing as a child and will be its first node.
         """
 
-        # Continuous customer IDs this Node contains.
+        # Continuous customer IDs this node contains.
         self.segment: Tuple[int, int] = (customer_id, customer_id)
 
         # Tree children of this node.
@@ -54,14 +54,14 @@ class CohortCustomerSegmentsTreeBuilderNode(ComparisonMixin):
 
     def __lt__(self, other: CohortCustomerSegmentsTreeBuilderNode) -> bool:
         """
-        The comparison methods are used by bisect to find the position
+        The comparison methods are used by `bisect` to find the position
         where to insert the `customer_id` in `add_customer` method.
 
         :param other: The object to compare this object to.
         :return: `True` if this object subtree lowest `customer_id` is less than `other` lowest `customer_id`.
         """
 
-        return self.subtree_range[0] < other.segment[0]
+        return self.segment[0] < other.segment[0]
 
     def __eq__(self, other: CohortCustomerSegmentsTreeBuilderNode) -> bool:
         """
@@ -72,7 +72,7 @@ class CohortCustomerSegmentsTreeBuilderNode(ComparisonMixin):
         :return: `True` if this object subtree lowest `customer_id` is equal to `other` lowest `customer_id`.
         """
 
-        return self.subtree_range[0] == other.segment[0]
+        return self.segment[0] == other.segment[0]
 
     def _try_expand_subtree_range_maximum(self, customer_id: int) -> None:
         """
@@ -153,7 +153,7 @@ class CohortCustomerSegmentsTreeBuilderNode(ComparisonMixin):
             # Take reference to the upper (right) node to update its segments afterward.
             # We actually do not know which node will be removed, the lower or one of nodes in the subtree.
             new_node = self.subtree[index + 1]
-            removed_last_node = self._remove_last_node(index)
+            removed_last_node = self._remove_last_node(index=index)
             new_node.segment = (removed_last_node.segment[0], new_node.segment[1])
             new_node.subtree_range = (removed_last_node.segment[0], new_node.subtree_range[1])
 
@@ -235,7 +235,7 @@ class CohortCustomerSegmentsTreeBuilderNode(ComparisonMixin):
 
         # Try simple operations first - just expand the upper boundary of the segment.
         # If needed, the method is also performing needed merges with the first child or the next sibling.
-        if self._try_expand_segment_end(customer_id, try_merge_with_next_sibling):
+        if self._try_expand_segment_end(customer_id, try_merge_with_next_sibling=try_merge_with_next_sibling):
             return
 
         # Edge case: no children - just add the child.
@@ -270,7 +270,7 @@ class CohortCustomerSegmentsTreeBuilderNode(ComparisonMixin):
         if insertion_index > 0:
             self.subtree[insertion_index - 1]. \
                 add_customer(customer_id,
-                             try_merge_with_next_sibling if is_beyond_last else
+                             try_merge_with_next_sibling=try_merge_with_next_sibling if is_beyond_last else
                              lambda: self._try_merge_nodes_with_adjacent_segments(insertion_index - 1))
             if is_beyond_last:
                 self._expand_last_node_children()
@@ -282,7 +282,7 @@ class CohortCustomerSegmentsTreeBuilderNode(ComparisonMixin):
         # This is the place where having a tree pays off: this is O(1),
         # otherwise it would be list.insert with O(N).
         if not self.subtree[0].try_expand_segment_start(customer_id):
-            self.subtree[0] = CohortCustomerSegmentsTreeBuilderNode(customer_id, self.subtree[0])
+            self.subtree[0] = CohortCustomerSegmentsTreeBuilderNode(customer_id, child_node=self.subtree[0])
 
     def has_customer_id(self, customer_id: int) -> bool:
         """
@@ -371,7 +371,7 @@ class CohortCustomerSegmentsTreeBuilderRootNode(ComparisonMixin):
         if self.root_node is None:
             self.root_node = CohortCustomerSegmentsTreeBuilderNode(customer_id)
         elif customer_id + 1 < self.root_node.segment[0]:
-            self.root_node = CohortCustomerSegmentsTreeBuilderNode(customer_id, self.root_node)
+            self.root_node = CohortCustomerSegmentsTreeBuilderNode(customer_id, child_node=self.root_node)
         elif not self.root_node.try_expand_segment_start(customer_id) and \
                 not self.root_node.has_customer_id(customer_id):
             self.root_node.add_customer(customer_id)
@@ -469,7 +469,7 @@ class CohortCustomerSegmentsTreeBuilderRootNode(ComparisonMixin):
 class CohortInfo:
     """Cohort info used by the report generator."""
 
-    def __init__(self, cohort_id: int = None, cohort_week_start: date = None) -> None:
+    def __init__(self, cohort_id: int, cohort_week_start: date) -> None:
         """
         Cohort ID and cohort week start date are used by the report generator to print the cohort date.
 
@@ -561,10 +561,9 @@ class CohortCustomerSegmentsTreeBuilder:
             customer_cohort_id, None)
         if cohort_customer_id_segment_node is None:
             self.cohorts[customer_cohort_id] = \
-                CohortCustomerSegmentsTreeBuilderRootNodeWithCohortInfo(
-                    customer_id=customer.customer_id,
-                    cohort_id=customer_cohort_id,
-                    cohort_week_start=week_start
-                )
+                CohortCustomerSegmentsTreeBuilderRootNodeWithCohortInfo(customer.customer_id,
+                                                                        customer_cohort_id,
+                                                                        week_start
+                                                                        )
         else:
-            cohort_customer_id_segment_node.add_customer(customer_id=customer.customer_id)
+            cohort_customer_id_segment_node.add_customer(customer.customer_id)

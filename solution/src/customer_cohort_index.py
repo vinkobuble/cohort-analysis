@@ -80,6 +80,5 @@ class CustomerIndexBuilder:
         cohort_index = list(self.cohorts.values())
         cohort_index.sort()
 
-        self.customer_index = CustomerSegmentsCohortIndex(cohort_index=cohort_index,
-                                                          cohorts=self.cohorts)
+        self.customer_index = CustomerSegmentsCohortIndex(cohort_index, self.cohorts)
         return self.customer_index
