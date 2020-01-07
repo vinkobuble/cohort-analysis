@@ -2,9 +2,7 @@
 
 __by Vinko Buble, Dec, 2019__
 
-## Assignment
-
-[](https://github.com/vinkobuble/cohort-analysis/tree/master/assignment)
+[Assignment description and data](https://github.com/vinkobuble/cohort-analysis/tree/master/assignment)
 
 ## Cohort Analysis Script
 
