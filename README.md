@@ -1,9 +1,10 @@
-# Invitae coding assignment - Cohort Analysis
+# Coding assignment - Cohort Analysis
 
 __by Vinko Buble, Dec, 2019__
 
-This assignment is a part of candidate Vinko Buble interview process for Invitae, Inc. Senior Software Engineer position.
-The original assignment can be found [here](https://github.com/invitae/cohort-analysis-assignment).
+## Assignment
+
+[](https://github.com/vinkobuble/cohort-analysis/tree/master/assignment)
 
 ## Cohort Analysis Script
 
@@ -30,9 +31,9 @@ docker build -t cohort-analysis .
 
 If you cloned the repo in `Downloads` folder and extracted it there then execute:
 ```
-docker run --rm -v ~/Downloads/vinko-buble-invitae-cohort-analysis/data:/data -ti cohort-analysis python . --customers-file /data/customers.csv --orders-file /data/orders.csv --timezone -0800 --output-file /data/output.csv
+docker run --rm -v ~/Downloads/cohort-analysis/data:/data -ti cohort-analysis python . --customers-file /data/customers.csv --orders-file /data/orders.csv --timezone -0800 --output-file /data/output.csv
 ```
-Or change the path `~/Downloads/vinko-buble-invitae-cohort-analysis` to the absolute repo path (keep the `/data` part if you are reusing the `/data` folder). 
+Or change the path `~/Downloads/cohort-analysis` to the absolute repo path (keep the `/data` part if you are reusing the `/data` folder). 
  
 There are already sample files in [data](./data) folder inside the project folder.
 
@@ -43,7 +44,7 @@ The script will generate `output.csv` file inside the [data](./data) folder.
 
 Do not forget to change the `/data` folder path. It has to be absolute. 
 ```
-docker run --rm -v ~/Downloads/vinko-buble-invitae-cohort-analysis/data:/data -ti cohort-analysis python -m unittest
+docker run --rm -v ~/Downloads/cohort-analysis/data:/data -ti cohort-analysis python -m unittest
 ```
 
 
