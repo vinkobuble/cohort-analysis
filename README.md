@@ -154,6 +154,6 @@ The space complexity is `O(1)`, if we take into consideration that all needed me
 ## Additional improvements
 
 Additional improvements to the script that could be done:
-1. Progress reporting. Currently script reports only when it completes a particular step, but nothing in between. There would be an progress report object which would receive progress event, and this object would print the response out or store in the file.
+1. Progress reporting. Currently the script reports only when it completes a particular step, but nothing in between. There would be an progress report object which would receive progress event, and this object would print the response out or store it in the file.
 2. Continuing from the point where script was interrupted. It is of utmost importance for a long running scripts to be able to continue when they are interrupted. That means that script should be able to persist intermediate states and read them when it loads.
 
