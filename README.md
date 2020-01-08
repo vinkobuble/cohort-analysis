@@ -129,7 +129,7 @@ Then this list is sorted by the lowest customer ID in the cohort.
 
 The end result is `K` lists (one per each cohort), and maximum `S` segments per cohort list. Both lists are sorted and binary search can be used for lookups. 
 
-This way we achieve customer ID lookup time complexity of `O(logK x logS)`.
+This way we achieve customer ID lookup time complexity of `O(logK + logS)`.
 
 
 ### Aggregating statistics from orders file
