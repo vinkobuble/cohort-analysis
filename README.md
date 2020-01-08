@@ -143,7 +143,7 @@ And this step has to be done after all orders have been processed.
 
 There is `--max_weeks` CLI argument to limit number of weeks to process in the cases where there is more data than available memory.
 
-The time complexity of this step is `O(M x logS x logC)` - for each order we need to perform customer ID lookup to find which cohort the customer belongs.
+The time complexity of this step is `O(M x (logK + logS))` - for each order we need to perform customer ID lookup to find which cohort the customer belongs.
 
 ### Generating report - output CSV file
 
