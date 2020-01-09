@@ -148,7 +148,7 @@ The time complexity of this step is `O(M x (logK + logS))` - for each order we n
 ### Generating report - output CSV file
 
 The simplest of all steps. Take aggregated statistics and cohorts infos, and write the data out in CSV file. 
-The time complexity is `O(C x W)` where C is the number of cohorts, and W is the number of weeks.
+The time complexity is `O(K x W)` where K is the number of cohorts, and W is the number of weeks.
 The space complexity is `O(1)`, if we take into consideration that all needed memory is allocated in the previous step and not counting the output file as a memory consumer.
 
 ## Additional improvements
