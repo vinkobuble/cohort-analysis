@@ -101,7 +101,7 @@ Graphical presentation of continuous monotonic and almost continuous monotonic c
 
 For better understanding of the relations between numbers:
 
-`M >> N >> K ~ S`
+`M >> N >> K > S`
 
 `M`(orders) could be split by weeks, while we should be careful with splitting `N` (customers).
 
